@@ -741,6 +741,40 @@
   .bar-fill.hp { background: repeating-linear-gradient(90deg, #ff3a5e 0 6px, #e02a4c 6px 8px); }
   .bar-fill.atk { background: repeating-linear-gradient(90deg, #ffb02e 0 6px, #e8921a 6px 8px); }
   .scene::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,.09) 0 1px, transparent 1px 3px); }
+  /* ===== ГЛАВНОЕ МЕНЮ 2.0 ===== */
+  .overlay.hub { background: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1.6px) 0 0 / 22px 22px, linear-gradient(180deg, #140d28 0%, #0b0716 100%); }
+  .scene { position: relative; }
+  .scene::before { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+    box-shadow: inset 0 0 0 2px #0a0714, inset 0 0 0 4px #8a73c8, inset 0 0 0 6px #1a1230; }
+  .logo-wrap { position: absolute; top: 12px; left: 0; right: 0; text-align: center; pointer-events: none; z-index: 2; }
+  .logo-top { font-size: clamp(9px, 2.6vw, 12px); letter-spacing: 8px; padding-left: 8px; color: #8fe9ff;
+    text-shadow: 1px 0 #0a2a44, -1px 0 #0a2a44, 0 1px #0a2a44, 0 -1px #0a2a44, 0 3px 0 #0a2a44; }
+  .logo-main { font-size: clamp(20px, 6.4vw, 30px); letter-spacing: 2px; margin-top: 5px; color: #ffe04a;
+    -webkit-background-clip: border-box; background: none; filter: none; animation: logoFloat 3.6s steps(4) infinite;
+    text-shadow: 2px 0 #1a0a00, -2px 0 #1a0a00, 0 -2px #1a0a00, 0 2px #1a0a00,
+      1px 3px 0 #c85a00, 2px 4px 0 #c85a00, 3px 5px 0 #7a2e00, 4px 6px 0 #1a0a00, 0 0 18px rgba(255,180,0,.5); }
+  .logo-tag { display: inline-block; margin-top: 12px; font-size: 7px; letter-spacing: 3px; color: #e4dcff; background: rgba(10,7,20,.72);
+    border: 2px solid #5a4a8a; padding: 4px 8px; text-shadow: 1px 1px 0 #000; }
+  .hero-card { display: block; }
+  .hero-card-head { align-items: center; gap: 10px; }
+  .hero-port { width: 54px; height: 54px; flex-shrink: 0; background: radial-gradient(circle at 50% 70%, #3a2d63, #140d28); border: 2px solid #ffd700; box-shadow: inset 0 0 0 2px #0a0714; display: flex; align-items: center; justify-content: center; }
+  .hero-port canvas { width: 48px; height: 48px; image-rendering: pixelated; }
+  .hero-id { flex: 1; min-width: 0; }
+  .bar { position: relative; }
+  .bar::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 6px, rgba(8,5,16,.7) 6px 8px); pointer-events: none; }
+  .bar-fill.spd { background: repeating-linear-gradient(90deg, #36e2ff 0 6px, #1fa8c8 6px 8px); }
+  .btn.start { font-size: 14px; padding: 17px 10px; letter-spacing: 2px; border-bottom-width: 6px; max-width: none;
+    box-shadow: inset 3px 3px 0 rgba(255,255,255,.35), inset -3px -3px 0 rgba(0,0,0,.25);
+    clip-path: polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% 100%, 0 100%); }
+  .coin-pill, .icon-btn { box-shadow: inset 2px 2px 0 rgba(255,255,255,.14), inset -2px -2px 0 rgba(0,0,0,.3); }
+  .coin-pill { clip-path: polygon(0 3px, 3px 3px, 3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px)); }
+  .chapter-btn { box-shadow: inset 2px 2px 0 rgba(255,255,255,.08), inset -2px -2px 0 rgba(0,0,0,.35); }
+  .ch-ico { width: 48px; height: 44px; image-rendering: pixelated; flex-shrink: 0; }
+  .chapter-btn.endless .ch-ico { width: 36px; height: 33px; }
+  .chapter-btn.locked .ch-ico { filter: grayscale(1) brightness(.6); }
+  .tab-btn { box-shadow: inset 2px 2px 0 rgba(255,255,255,.07), inset -2px -2px 0 rgba(0,0,0,.35); }
+  .tab-btn.active { box-shadow: inset 2px 2px 0 rgba(255,255,255,.18), inset -2px -2px 0 rgba(0,0,0,.35), 0 -3px 0 #ffd700; }
+  .tab-btn.active .ti { transform: translateY(-2px); }
 </style>
 </head>
 <body>
@@ -791,13 +825,13 @@
     <div id="tab-play" class="tab-content">
       <div class="scene">
         <canvas id="previewCanvas" width="460" height="340"></canvas>
-        <div class="logo">PIXEL<br>ARCHERO</div>
-        <div class="logo-sub" id="logoSub">ПОДЗЕМЕЛЬЕ РОКА</div>
+        <div class="logo-wrap"><div class="logo-top">PIXEL</div><div class="logo-main">ARCHERO</div><div class="logo-tag" id="logoSub">ПОДЗЕМЕЛЬЕ РОКА</div></div>
       </div>
 
       <div class="hero-card">
         <div class="hero-card-head">
-          <div>
+          <div class="hero-port"><canvas id="hubPortrait" width="48" height="48"></canvas></div>
+          <div class="hero-id">
             <div class="hero-name" id="hubHeroName">Атрей</div>
             <div class="hero-weapon" id="hubWeaponName">Охотничий Лук</div>
           </div>
@@ -805,6 +839,7 @@
         </div>
         <div class="stat-row"><span class="stat-lbl">❤ ЗДОРОВЬЕ</span><div class="bar"><div class="bar-fill hp" id="barHp"></div></div><span class="stat-val" id="valHp">0</span></div>
         <div class="stat-row"><span class="stat-lbl">⚔ АТАКА</span><div class="bar"><div class="bar-fill atk" id="barDmg"></div></div><span class="stat-val" id="valDmg">0</span></div>
+        <div class="stat-row"><span class="stat-lbl">👟 СКОРОСТЬ</span><div class="bar"><div class="bar-fill spd" id="barSpd"></div></div><span class="stat-val" id="valSpd">0</span></div>
         <div class="passive" id="hubPassive"></div>
       </div>
 
@@ -1885,6 +1920,59 @@ const SPRITES = {
   ]
 };
 
+// ===== НОВЫЕ ГЕРОИ 14×16: контур, тени, блики, детали =====
+Object.assign(PALETTE, { '1': '#d9946a', '2': '#ff9a8a', '3': '#6b3a1e', '4': '#3a2a4a' });
+function heroSprite(head, c, patch) {
+  const { m, d, l, a, t, b, s } = c;
+  const rows = head.concat([
+    `...B${d}${t}${m}${m}${t}${d}B...`,
+    `..B${l}${m.repeat(7)}B..`,
+    `..B${m}${l}${m}${m}${m}${m}${a}${m}B..`,
+    `..B${d}${m}${m}${t}${t}${m}${m}${d}B..`,
+    `..B${m.repeat(7)}${d}B..`,
+    `.B${s}B${d}${m}${m}${m}${m}${d}B${s}B.`,
+    `...B${d}${d}BB${d}${d}B...`,
+    `...B${b}${b}BB${b}${b}B...`,
+    '...BBBBBBBB...'
+  ]);
+  if (patch) for (const k in patch) rows[k] = patch[k];
+  return rows;
+}
+Object.assign(SPRITES, {
+  ranger: heroSprite([
+    '....BBBBBB....', '...BGGLLGGB...', '..BGGGGGGGGB..', '..BGg3333gGB..',
+    '..BG3SSSS3GB..', '..BGSBSSBSGB..', '...BgSSSSgB...'
+  ], { m: 'G', d: 'g', l: 'L', a: 'N', t: 'Y', b: 'N', s: 'S' }),
+  pyro: heroSprite([
+    '...O..YY..O...', '..BOOOYYOOOB..', '..BOOOOOOOOB..', '..BOSSSSSSOB..',
+    '..B1SSSSSS1B..', '..BSSBSSBSSB..', '...B1SSSS1B...'
+  ], { m: 'R', d: 'r', l: 'O', a: 'O', t: 'Y', b: 'O', s: 'S' }),
+  assassin: heroSprite([
+    '....BBBBBB....', '...BPPPPPPB...', '..BPPppppPPB..', '..BPpSSSSpPB..',
+    '..BpSCSSCSpB..', '..BpppppppPB..', '...BppppppB...'
+  ], { m: 'P', d: 'p', l: 'v', a: 'C', t: 'C', b: 'M', s: 'S' }),
+  paladin: heroSprite([
+    '....YYYYYY....', '...BDKKKKDB...', '..BDDDDDDDDB..', '..BDdDDDDdDB..',
+    '..BDdSSSSdDB..', '..BDSBSSBSDB..', '...BdSSSSdB...'
+  ], { m: 'D', d: 'd', l: 'K', a: 'Y', t: 'Y', b: 'd', s: 'K' }, { 8: '..BYDDDDDDYB..' }),
+  necro: heroSprite([
+    '....BBBBBB....', '...BppppppB...', '..BppppppppB..', '..BpMKKKKMpB..',
+    '..BpKCKKCKpB..', '..BpKKBBKKpB..', '...BpKBKBpB...'
+  ], { m: 'p', d: 'M', l: 'P', a: 'C', t: 'K', b: 'M', s: 'K' }),
+  druid: heroSprite([
+    'N..N......N..N', '.NNNBGGGGBNNN.', '..BGGLGGLGGB..', '..BGGSSSSGGB..',
+    '..BGSSSSSSGB..', '..BGSBSSBSGB..', '...BgSSSSgB...'
+  ], { m: 'G', d: 'g', l: 'L', a: 'T', t: 'H', b: 'N', s: 'S' }),
+  frost: heroSprite([
+    '..W..CCCC..W..', '..BCCWCCWCCB..', '..BCCCCCCCCB..', '..BCCSSSSCCB..',
+    '..BCSSSSSSCB..', '..BcSBSSBScB..', '...BcSSSScB...'
+  ], { m: 'C', d: 'c', l: 'W', a: 'W', t: 'W', b: 'c', s: 'S' }),
+  storm: heroSprite([
+    'Y..Y.YYYY.Y..Y', '.YYYBYYYYBYYY.', '..BYYYYYYYYB..', '..BYYSSSSYYB..',
+    '..BYSSSSSSYB..', '..BSSBSSBSSB..', '...B1SSSS1B...'
+  ], { m: 'D', d: 'd', l: 'K', a: 'C', t: 'Y', b: 'd', s: 'S' })
+});
+
 const ENEMY_LABELS = {
   slime: 'Слизень',
   skeleton: 'Лучник',
@@ -2845,7 +2933,7 @@ function drawMenuFX(c, t, CW, CH) {
   for (let k = 0; k < 3; k++) { const x = ((t * (0.012 + k * 0.006) + k * 160) % (CW + 180)) - 180; c.fillStyle = 'rgba(190,170,255,.04)'; c.fillRect(x, 170 + k * 46, 180, 16); }   // дымка
   const ph = (t % 9000) / 1000;
   if (ph < 1) { const x = CW - 90 - ph * 320, y = 14 + ph * 150; for (let i = 0; i < 14; i++) { c.fillStyle = `rgba(255,255,255,${(1 - i / 14) * (1 - ph)})`; c.fillRect(x + i * 5, y - i * 3.2, 3, 3); } }   // падающая звезда
-  const v = c.createRadialGradient(CW / 2, CH / 2, CH * 0.32, CW / 2, CH / 2, CH * 0.85); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.55)'); c.fillStyle = v; c.fillRect(0, 0, CW, CH);
+  c.drawImage(menuVignette(CW, CH), 0, 0);
 }
 function legendFlash() {
   const w = document.getElementById('game-wrapper'); w.classList.remove('legend-flash'); void w.offsetWidth; w.classList.add('legend-flash'); playSound('trophy');
@@ -6326,7 +6414,8 @@ function drawGame() {
 
     const hopY = player.walkFrame > 0 ? Math.abs(Math.sin(player.walkFrame)) * -3 : 0;
     const spr = SPRITES[player.sprite] || SPRITES.ranger;
-    drawPixelSprite(ctx, spr, player.x, player.y + hopY, spr[0].length > 10 ? 2.4 : 2.7, player.facingLeft, player.invuln > 0 && player.invuln % 4 < 2);
+    const breath = player.walkFrame > 0 ? 0 : Math.sin(time * 0.004) * 0.025;
+    drawPixelSprite(ctx, spr, player.x, player.y + hopY - 2, spr[0].length >= 14 ? 2.15 : (spr[0].length > 10 ? 2.4 : 2.7), player.facingLeft, player.invuln > 0 && player.invuln % 4 < 2, 1 - breath, 1 + breath);
     drawWeaponInHand(ctx, player.weaponId, player.x, player.y + hopY + 2, player.aimAngle, player.recoil);
 
     if (player.shieldCharges > 0) {
@@ -7084,91 +7173,146 @@ document.getElementById('storyText').addEventListener('click', storyAdvance);
 document.getElementById('storySkip').addEventListener('click', e => { e.stopPropagation(); storyClose(); });
 // --- ЖИВОЕ ПРЕВЬЮ ВЫБРАННОГО ПЕРСОНАЖА В ГЛАВНОМ МЕНЮ ---
 const MENU_STARS = Array.from({ length: 34 }, (_, i) => ({ x: (i * 53 + 17) % 230, y: (i * 29 + 5) % 78, p: i * 1.7, s: i % 5 === 0 ? 2 : 1 }));
+// ===== ГЛАВНОЕ МЕНЮ: пиксельная сцена без градиентов =====
+let _menuVig = null;
+function menuVignette(CW, CH) {      // виньетка из «дизерных» блоков 4×4, а не плавный градиент
+  if (_menuVig) return _menuVig;
+  const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+  const g = cv.getContext('2d'), S = 4, B = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  g.fillStyle = 'rgba(4,2,12,.6)';
+  for (let y = 0; y < CH; y += S) for (let x = 0; x < CW; x += S) {
+    const dx = (x / CW - 0.5) * 2, dy = (y / CH - 0.5) * 2, d = Math.sqrt(dx * dx * 0.8 + dy * dy);
+    const a = Math.max(0, (d - 0.62) / 0.85) * 16;
+    if (a > B[((y / S) & 3) * 4 + ((x / S) & 3)]) g.fillRect(x, y, S, S);
+  }
+  return (_menuVig = cv);
+}
+function menuPine(c, x, base, h, col) {
+  for (let i = 0; i < h; i++) { let w = Math.min(7, 1 + Math.floor(i * 0.42)); if (i % 6 === 5) w = Math.max(1, w - 2); R(c, col, x - w, base - h + i, 2 * w + 1, 1); }
+  R(c, col, x, base - 2, 1, 3);
+}
+let _menuDungeonBg = null;
+function buildDungeonBg(GY, W2, H2) {
+  const cv = document.createElement('canvas'); cv.width = W2; cv.height = H2;
+  const c = cv.getContext('2d');
+  const bands = ['#07051a', '#0d0a2a', '#150f3a', '#1e1650', '#2b1d66', '#3d2a80', '#583a96'], bh = Math.ceil(GY / bands.length);
+  bands.forEach((col, i) => {
+    R(c, col, 0, i * bh, W2, bh);
+    if (i > 0) for (let y = 0; y < 2; y++) for (let x = 0; x < W2; x++) if ((x + y) & 1) R(c, bands[i - 1], x, i * bh + y, 1, 1);
+  });
+  for (let x = 0; x < W2; x++) {       // горы в два слоя
+    const h1 = 30 + Math.round(9 * Math.sin(x * 0.045 + 0.5) + 5 * Math.sin(x * 0.12 + 2));
+    const h2 = 15 + Math.round(6 * Math.sin(x * 0.08 + 1) + 3 * Math.sin(x * 0.21));
+    R(c, '#2a1f5a', x, GY - h1, 1, h1); R(c, '#3b2d78', x, GY - h1, 1, 1);
+    R(c, '#1c1440', x, GY - h2, 1, h2);
+  }
+  for (const [x, h] of [[8, 26], [20, 20], [34, 28], [48, 18], [96, 22], [130, 20], [226, 24]]) menuPine(c, x, GY, h, '#0d0a24');
+  // замок: башни, стена, ворота
+  const wall = (x, y, w, h) => { BOX(c, x, y, w, h, '#3a3060', '#4d417e', '#262046'); for (let yy = y + 4, k = 0; yy < y + h - 1; yy += 5, k++) { R(c, '#262046', x + 1, yy, w - 2, 1); for (let xx = x + 3 + (k % 2) * 4; xx < x + w - 2; xx += 8) R(c, '#262046', xx, yy - 4, 1, 4); } };
+  wall(150, 80, 62, 38);
+  for (let x = 150; x < 212; x += 8) { R(c, O, x - 1, 76, 6, 5); R(c, '#4d417e', x, 77, 4, 4); }
+  wall(140, 58, 20, 60); wall(202, 58, 20, 60);
+  for (const tx of [140, 202]) for (let x = tx; x < tx + 20; x += 7) { R(c, O, x - 1, 53, 6, 6); R(c, '#4d417e', x, 54, 4, 5); }
+  for (const [x, y] of [[147, 68], [207, 68], [147, 86], [207, 86]]) { R(c, O, x - 1, y - 1, 6, 8); R(c, '#ff9a2e', x, y, 4, 6); R(c, '#ffe27a', x, y, 2, 2); }
+  R(c, O, 149, 40, 2, 15); R(c, '#6a6488', 149, 41, 1, 14); for (let i = 0; i < 9; i++) R(c, '#c8473c', 151 + i, 41 + (i > 5 ? 1 : 0), 1, 7 - Math.floor(i / 3));   // флаг
+  R(c, O, 168, 90, 26, 28); R(c, '#05030a', 169, 92, 24, 26);
+  R(c, '#3a3060', 169, 92, 2, 1); R(c, '#3a3060', 191, 92, 2, 1);
+  for (const x of [166, 195]) { R(c, O, x - 1, 96, 3, 22); R(c, '#6a4424', x, 97, 1, 21); }
+  // земля
+  R(c, '#18122e', 0, GY, W2, H2 - GY); R(c, '#2b2252', 0, GY, W2, 2);
+  for (let y = GY + 2; y < H2; y++) for (let x = 0; x < W2; x++) { const n = hh(x, y) % 17; if (n === 0) R(c, '#221a42', x, y, 1, 1); else if (n === 1) R(c, '#120d26', x, y, 1, 1); }
+  for (let y = GY + 2; y < H2; y++) {  // мощёная тропа от ворот к костру
+    const u = (y - GY) / (H2 - GY), cx = Math.round(181 - u * 62), w = 8 + Math.round(u * 20);
+    R(c, '#3a3060', cx - w, y, 2 * w, 1);
+    for (let x = cx - w; x < cx + w; x += 6) if ((Math.floor((y - GY) / 3) + Math.floor(x / 6)) & 1) R(c, '#2f2750', x + ((y - GY) % 6 < 3 ? 0 : 3), y, 3, 1); else R(c, '#4a3f7a', x, y, 1, 1);
+  }
+  for (let i = 0; i < 26; i++) { const x = hh(i, 11) % W2, y = GY + 6 + hh(i, 12) % 46; R(c, '#2f6a4a', x, y, 1, 2); R(c, '#3c8a5a', x + 2, y + 1, 1, 1); }
+  for (const [x, y] of [[86, 150], [150, 156], [206, 146], [44, 164]]) { R(c, O, x - 1, y - 1, 7, 5); R(c, '#6a6488', x, y, 5, 3); R(c, '#8a84a8', x, y, 5, 1); }
+  // палатка
+  ROOF(c, 28, 150, 19, 24, '#c8473c', '#8e2d33'); R(c, O, 24, 140, 9, 10); R(c, '#1a0d12', 25, 141, 7, 9); R(c, '#e8dcc0', 28, 128, 1, 2);
+  R(c, O, 9, 134, 2, 18); R(c, '#6a4424', 9, 135, 1, 17);
+  return cv;
+}
+function drawDungeonScene(c, t, GY, W2, H2) {
+  if (!_menuDungeonBg) _menuDungeonBg = buildDungeonBg(GY, W2, H2);
+  c.drawImage(_menuDungeonBg, 0, 0);
+  for (const st of MENU_STARS) if (st.y < 52) { const a = 0.35 + 0.55 * Math.abs(Math.sin(t * 0.002 + st.p)); R(c, `rgba(255,255,255,${a.toFixed(2)})`, st.x, st.y, st.s, st.s); }
+  drawMoon(c, t, 190, 30, 12, true);
+  for (let k = 0; k < 3; k++) {      // летучие мыши
+    const x = ((t * (0.018 + k * 0.006) + k * 90) % (W2 + 40)) - 20, y = 38 + k * 13 + Math.round(Math.sin(t * 0.003 + k * 2) * 4);
+    drawPixelSprite(c, SPRITES.bat, Math.round(x), y, 1, false, false, 1, 0.45 + 0.55 * Math.abs(Math.sin(t * 0.02 + k)));
+  }
+  for (let y = 92; y < 118; y += 2) for (let x = 169; x < 193; x += 2) {   // портал
+    const v = Math.sin(x * 0.5 + t * 0.004) + Math.sin(y * 0.4 - t * 0.005);
+    R(c, v > 1 ? '#a8ffd0' : v > 0 ? '#35e083' : v > -1 ? '#1fae5c' : '#0e6a3a', x, y, 2, 2);
+  }
+  for (const x of [166, 195]) { const f = Math.floor(t / 110 + x) % 3; R(c, '#ff5a1e', x - 1, 93 - f % 2, 3, 4); R(c, '#ffb02e', x, 94 - f % 2, 1, 2); R(c, '#fff3a8', x, 95, 1, 1); }
+}
+
 function drawHeroPreview() {
   if (state !== 'HUB') return;
-  const t = performance.now();
-  const c = pCtx, CW = previewCanvas.width, CH = previewCanvas.height;
-  const hStats = getHeroStats(saveData.selectedHero);
-  const wStats = getWeaponStats(saveData.selectedWeapon);
-  const GY = 118; // линия земли
+  const t = performance.now(), c = pCtx, CW = previewCanvas.width, CH = previewCanvas.height;
+  const hStats = getHeroStats(saveData.selectedHero), wStats = getWeaponStats(saveData.selectedWeapon);
+  const GY = 118, hx = 112, hy = GY + 6, fx = 62, fy = GY + 20, ch = hubChapter();
   c.imageSmoothingEnabled = false;
-  c.save();
-  c.scale(2, 2);
+  c.save(); c.scale(2, 2);
   const CW2 = CW / 2, CH2 = CH / 2;
-
-  if (hubChapter() === 4) drawEndlessBackdrop(c, t, GY, CW2, CH2);
-  else if (hubChapter() === 3) drawSeaBackdrop(c, t, GY, CW2, CH2);
-  else if (hubChapter() === 2) drawForestBackdrop(c, t, GY, CW2, CH2);
-  else {
-  // небо
-  const sky = c.createLinearGradient(0, 0, 0, GY);
-  sky.addColorStop(0, '#0b0820'); sky.addColorStop(0.6, '#241a4a'); sky.addColorStop(1, '#4a2f6b');
-  c.fillStyle = sky; c.fillRect(0, 0, CW2, CH2);
-  for (const st of MENU_STARS) {
-    c.fillStyle = `rgba(255,255,255,${0.35 + 0.5 * Math.abs(Math.sin(t * 0.002 + st.p))})`;
-    c.fillRect(st.x, st.y, st.s, st.s);
+  if (ch === 4) drawEndlessBackdrop(c, t, GY, CW2, CH2);
+  else if (ch === 3) drawSeaBackdrop(c, t, GY, CW2, CH2);
+  else if (ch === 2) drawForestBackdrop(c, t, GY, CW2, CH2);
+  else drawDungeonScene(c, t, GY, CW2, CH2);
+  // костёр (растёт вместе с лагерем) и пиксельный свет
+  c.save(); c.translate(fx - CAMP_FIRE.x, fy - CAMP_FIRE.y); drawCampFire(c, t, Math.max(3, campLevel())); c.restore();
+  const gr = Math.floor(t / 130) % 2 ? 54 : 58; c.drawImage(glowSprite(gr), fx - gr, fy - 8 - gr); c.drawImage(glowSprite(34), fx - 34, fy - 8 - 34);
+  for (let k = 0; k < 7; k++) {       // светлячки
+    const ax = Math.round(20 + (k * 37) % 190 + Math.sin(t * 0.0011 + k) * 14), ay = Math.round(70 + (k * 23) % 50 + Math.cos(t * 0.0013 + k * 2) * 8);
+    const a = 0.3 + 0.5 * Math.abs(Math.sin(t * 0.004 + k));
+    R(c, `rgba(190,255,150,${(a * 0.35).toFixed(2)})`, ax - 1, ay, 3, 1); R(c, `rgba(190,255,150,${(a * 0.35).toFixed(2)})`, ax, ay - 1, 1, 3); R(c, `rgba(230,255,190,${a.toFixed(2)})`, ax, ay, 1, 1);
   }
-  // луна
-  drawMoon(c, t, 190, 32, 13, true);
-  // дальние горы
-  c.fillStyle = '#1a1238';
-  c.beginPath(); c.moveTo(0, GY); c.lineTo(0, 92); c.lineTo(30, 76); c.lineTo(58, 96); c.lineTo(92, 70); c.lineTo(130, 98); c.lineTo(165, 80); c.lineTo(205, 98); c.lineTo(230, 84); c.lineTo(230, GY); c.closePath(); c.fill();
-  // ворота подземелья на холме
-  c.fillStyle = '#120c26'; c.fillRect(150, 82, 56, 36);
-  c.fillStyle = '#2c2250'; c.fillRect(150, 82, 56, 4);
-  for (let i = 0; i < 4; i++) { c.fillStyle = '#231a42'; c.fillRect(152 + i * 14, 78, 8, 8); }
-  c.fillStyle = '#06040f'; c.fillRect(166, 92, 24, 26);
-  c.fillStyle = `rgba(53,224,131,${0.35 + 0.15 * Math.sin(t * 0.004)})`; c.fillRect(168, 94, 20, 24);
-  // земля
-  c.fillStyle = '#1b1530'; c.fillRect(0, GY, CW2, CH2 - GY);
-  c.fillStyle = '#2a2147'; c.fillRect(0, GY, CW2, 3);
-  for (let i = 0; i < 18; i++) { c.fillStyle = i % 2 ? '#241c3d' : '#2f2550'; c.fillRect((i * 37) % CW2, GY + 8 + (i * 13) % 40, 18 + (i % 3) * 6, 3); }
-  c.fillStyle = '#37805a';
-  for (let i = 0; i < 14; i++) { const gx = (i * 41 + 9) % CW2; c.fillRect(gx, GY - 2, 1, 3); c.fillRect(gx + 2, GY - 3, 1, 4); }
-  }
-
-  // костёр: свет и пламя
-  const fx = 62, fy = GY + 20;
-  const flick = 0.85 + 0.15 * Math.sin(t * 0.03) + 0.08 * Math.sin(t * 0.071);
-  const glow = c.createRadialGradient(fx, fy - 6, 2, fx, fy - 6, 80 * flick);
-  glow.addColorStop(0, 'rgba(255,160,50,.55)'); glow.addColorStop(1, 'rgba(255,120,30,0)');
-  c.fillStyle = glow; c.beginPath(); c.arc(fx, fy - 6, 80 * flick, 0, Math.PI * 2); c.fill();
-  c.fillStyle = '#4b2a18'; c.fillRect(fx - 12, fy, 24, 4);
-  c.fillStyle = '#6b3d22'; c.fillRect(fx - 10, fy - 2, 8, 3); c.fillRect(fx + 2, fy - 2, 8, 3);
-  const fh = 15 * flick;
-  c.fillStyle = '#ff5a1e'; c.beginPath(); c.moveTo(fx - 8, fy); c.lineTo(fx - 3, fy - fh * .7); c.lineTo(fx, fy - fh * .4); c.lineTo(fx + 3, fy - fh); c.lineTo(fx + 8, fy); c.closePath(); c.fill();
-  c.fillStyle = '#ffb02e'; c.beginPath(); c.moveTo(fx - 5, fy); c.lineTo(fx - 1, fy - fh * .6); c.lineTo(fx + 2, fy - fh * .45); c.lineTo(fx + 5, fy); c.closePath(); c.fill();
-  c.fillStyle = '#fff3a8'; c.fillRect(fx - 2, fy - fh * .3, 4, fh * .3);
-  for (let k = 0; k < 5; k++) {
-    const u = ((t * 0.03 + k * 23) % 50) / 50;
-    c.fillStyle = `rgba(255,${180 + k * 10},80,${1 - u})`;
-    c.fillRect(fx - 6 + ((k * 7 + Math.floor(t / 400) * 3) % 14), fy - 8 - u * 38, 1.5, 1.5);
-  }
-  // светлячки
-  for (let k = 0; k < 6; k++) {
-    const ax = 20 + (k * 37) % 190 + Math.sin(t * 0.0011 + k) * 14;
-    const ay = 70 + (k * 23) % 40 + Math.cos(t * 0.0013 + k * 2) * 8;
-    c.fillStyle = `rgba(190,255,150,${0.35 + 0.4 * Math.abs(Math.sin(t * 0.004 + k))})`;
-    c.fillRect(ax, ay, 2, 2);
-  }
-
-  // свет костра на земле
-  const hx = 112, hy = GY + 6;
-  c.fillStyle = 'rgba(0,0,0,.4)'; c.beginPath(); c.ellipse(hx, hy + 17, 14, 4, 0, 0, Math.PI * 2); c.fill();
-  const hg = c.createRadialGradient(hx - 14, hy, 2, hx - 14, hy, 34);
-  hg.addColorStop(0, `rgba(255,150,60,${0.16 * flick})`); hg.addColorStop(1, 'rgba(255,150,60,0)');
-  c.fillStyle = hg; c.beginPath(); c.arc(hx - 14, hy, 34, 0, Math.PI * 2); c.fill();
+  E(c, 'rgba(0,0,0,.45)', hx, hy + 22, 15, 3);
   c.restore();
   drawMenuFX(c, t, CW, CH);
-
-  // герой рисуется в родном разрешении холста, целым масштабом (чёткие пиксели)
   const spr = SPRITES[hStats.sprite] || SPRITES.ranger;
-  const sc = Math.max(5, Math.round(78 / spr[0].length));
-  const bobPx = Math.round(Math.sin(t * 0.004) * 2) * 2;
+  const sc = Math.max(5, Math.round(84 / spr[0].length));
+  const bobPx = Math.round(Math.sin(t * 0.004) * 1) * 2;
   drawPixelSprite(c, spr, Math.round(hx * 2), Math.round((hy - 2) * 2) + bobPx, sc, false, false);
   c.save(); c.scale(2, 2);
-  drawWeaponInHand(c, wStats.id, hx + 12, hy + 4 + bobPx / 2, 0, Math.round(Math.sin(t * 0.003) * 1.2), 2);
+  drawWeaponInHand(c, wStats.id, hx + 9, hy + 9 + bobPx / 2, 0, Math.round(Math.sin(t * 0.003) * 1.2), 2);
   c.restore();
+}
+
+// иконки глав на кнопках выбора
+function drawChapterIcons() {
+  const make = (n, fn) => {
+    const b = document.getElementById('chBtn' + n); if (!b || b.querySelector('.ch-ico')) return;
+    const cv = document.createElement('canvas'); cv.width = 24; cv.height = 22; cv.className = 'ch-ico'; b.insertBefore(cv, b.firstChild);
+    const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; fn(c);
+  };
+  make(1, c => {
+    for (let x = 2; x < 22; x += 6) { R(c, O, x - 1, 0, 5, 4); R(c, '#8a84a8', x, 1, 3, 3); }
+    R(c, O, 1, 3, 22, 19); R(c, '#8a84a8', 2, 4, 20, 17);
+    for (let y = 7; y < 20; y += 4) R(c, '#6a6488', 2, y, 20, 1);
+    for (let y = 4, k = 0; y < 20; y += 4, k++) for (let x = 3 + (k % 2) * 4; x < 22; x += 8) R(c, '#6a6488', x, y, 1, 4);
+    R(c, O, 7, 9, 10, 13); R(c, '#05030a', 8, 10, 8, 12); R(c, '#28c76f', 9, 12, 6, 10); R(c, '#9dffc4', 11, 14, 2, 8);
+  });
+  make(2, c => {
+    for (let i = 0; i < 15; i++) { const w = 1 + Math.floor(i * 0.7); R(c, O, 11 - w, i, 2 * w + 3, 1); }
+    R(c, O, 9, 15, 6, 7);
+    for (let i = 0; i < 15; i++) { const w = 1 + Math.floor(i * 0.7); R(c, i % 4 === 3 ? '#2f8a3c' : '#58b858', 12 - w, 1 + i, 2 * w + 1, 1); R(c, '#2a6a34', 12, 1 + i, w, 1); }
+    R(c, '#8a5a34', 11, 16, 3, 5); R(c, '#c8ff8a', 10, 4, 1, 1);
+  });
+  make(3, c => {
+    R(c, O, 0, 2, 24, 20); R(c, '#2a78c0', 1, 3, 22, 18);
+    for (let r = 0; r < 4; r++) for (let x = 1; x < 23; x++) { const y = 5 + r * 4 + Math.round(Math.sin(x * 0.7 + r) * 1.4); R(c, r % 2 ? '#7fd8ff' : '#bff0ff', x, y, 1, 1); R(c, '#1a56a0', x, y + 1, 1, 1); }
+    R(c, '#ffffff', 17, 13, 2, 2);
+  });
+  make(4, c => {
+    for (let pass = 0; pass < 2; pass++) for (let i = 0; i < 120; i++) {
+      const t = i / 120 * Math.PI * 2, s = 1 + Math.sin(t) * Math.sin(t);
+      const x = Math.round(11 + 10 * Math.cos(t) / s), y = Math.round(10 + 8 * Math.sin(t) * Math.cos(t) / s);
+      if (!pass) R(c, O, x - 1, y - 1, 4, 4); else R(c, i < 60 ? '#ff7ae6' : '#7fe8ff', x, y, 2, 2);
+    }
+  });
 }
 
 // --- РЕНДЕР И ОБРАБОТЧИКИ ВСЕХ КНОПОК МЕНЮ ---
@@ -7213,6 +7357,12 @@ function renderHubUI() {
   document.getElementById('barHp').style.width = `${Math.min(100, hStats.hp / 420 * 100)}%`;
   document.getElementById('barDmg').style.width = `${Math.min(100, totalDmg / 260 * 100)}%`;
   document.getElementById('hubPassive').textContent = hStats.passiveDesc;
+  const spdV = hStats.speed * (1 + 0.02 * campLvl('boots') + trophyBonus('spd'));
+  document.getElementById('valSpd').textContent = spdV.toFixed(1);
+  document.getElementById('barSpd').style.width = `${Math.min(100, spdV / 4.2 * 100)}%`;
+  const pcv = document.getElementById('hubPortrait'), pg = pcv.getContext('2d'), psp = SPRITES[hStats.sprite] || SPRITES.ranger;
+  pg.imageSmoothingEnabled = false; pg.clearRect(0, 0, 48, 48);
+  drawPixelSprite(pg, psp, 24, 25, Math.max(1, Math.floor(46 / Math.max(psp[0].length, psp.length))));
 
   const mk = (cls, html) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; return d; };
 
@@ -7641,6 +7791,7 @@ ensureSave();
 // старые сохранения: уже пройденные главы считаем прочитанными в летописи
 if (saveData.ch1Cleared) { saveData.story.intro1 = saveData.story.outro1 = true; }
 if (saveData.ch2Cleared || (saveData.trophies && saveData.trophies['2:50'])) { saveData.story.intro2 = saveData.story.outro2 = true; }
+drawChapterIcons();
 renderHubUI();
 if (!saveData.story.prologue) showStory('prologue');
 
