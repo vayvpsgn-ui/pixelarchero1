@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Облачный леденец 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&display=swap">
+<style>
+/* цвета интерфейса меняются вместе с миром (см. hud в LV) */
+:root{--bg:rgba(60,30,110,.85);--t:#fff;--b:#ff7ac6;--bl:#ff9ed8;--bt:#3a0f45;--sh:#b3427f;--p1:rgba(104,52,196,.96);--p2:rgba(34,18,92,.97);--edge:#ffb6e6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;overflow:hidden;background:#6db6ff;font-family:'Comfortaa',system-ui,sans-serif;touch-action:none;user-select:none;color:var(--t)}
+canvas{display:block}
+#top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;padding:10px;font-weight:700;pointer-events:none}
+#top span,#top button{background:var(--bg);padding:6px 12px;border-radius:18px;font-size:15px}
+#menuBtn{pointer-events:auto;font-family:inherit;font-weight:700;color:var(--t);border:0;cursor:pointer}
+.f{position:fixed;font-weight:800;font-size:20px;color:#fff;text-shadow:0 0 4px var(--b),0 2px 3px #0008;pointer-events:none;transform:translate(-50%,-50%)}
+#lock{display:none;background:var(--bg);padding:4px 10px;border-radius:12px;font-size:13px}
+#ov,#menu,#pm{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0006;z-index:5}
+#ov>div,#menu>div,#pm>div{background:var(--bg);padding:24px 30px;border-radius:20px;text-align:center;max-width:min(520px,92vw);max-height:90vh;overflow:auto;box-sizing:border-box;border:2px solid var(--edge)}
+#ov button,#pm button,#menu>div>button{font-family:inherit;margin-top:12px;border:0;border-radius:12px;padding:10px 20px;background:var(--b);color:var(--bt);font-weight:800;font-size:16px;cursor:pointer}
+#hint{position:fixed;top:58px;left:0;right:0;text-align:center;font-size:14px;pointer-events:none;text-shadow:0 2px 4px #000a;padding:0 10px}
+#stam{position:fixed;top:calc(env(safe-area-inset-top,0px) + 52px);left:12px;width:130px;height:10px;background:var(--bg);border-radius:6px;overflow:hidden;pointer-events:none}
+#stam i{display:block;height:100%;width:100%;background:#ffd23f}
+#sprint{position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);width:68px;height:68px;border-radius:50%;border:0;background:var(--b);color:var(--bt);font-size:28px;box-shadow:0 4px 0 var(--sh);touch-action:none;cursor:pointer}
+#sprint:active{transform:translateY(2px)}
+.mk{font-size:18px;background:var(--bg);border-radius:20px;padding:3px 10px;display:none;white-space:nowrap}
+#shop,.pnl{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 10px);width:min(480px,calc(100% - 16px));max-height:62vh;overflow:auto;display:none;flex-direction:column;gap:9px;padding:14px 12px 12px;box-sizing:border-box;background:linear-gradient(165deg,var(--p1),var(--p2));border:2px solid var(--edge);border-radius:24px;box-shadow:0 0 0 4px #ffffff22,0 14px 40px #000b,inset 0 2px 0 #ffffff33;touch-action:pan-y;scrollbar-width:none}
+#shop h3,.pnl h3{margin:0 0 2px;font-size:18px;display:flex;justify-content:space-between;align-items:center;gap:10px;color:#fff;text-shadow:0 2px 0 var(--bt)}
+#shop h3 small,.pnl h3 small{font-size:15px;background:linear-gradient(180deg,#ffe36e,#ffb02e);color:#4a2400;padding:4px 12px;border-radius:999px;box-shadow:0 2px 0 #b3701a;text-shadow:none}
+.row{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:10px;background:linear-gradient(180deg,#ffffff1f,#ffffff0d);border:1px solid #ffffff26;border-radius:16px;padding:9px 10px}
+.ic{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;background:linear-gradient(145deg,var(--c1),var(--c2));box-shadow:inset 0 2px 0 #ffffff66,0 3px 0 #0004}
+.tx{display:flex;flex-direction:column;gap:3px;min-width:0}.tx b{font-size:14px}.tx span{font-size:11.5px;opacity:.8}.tx i{font-style:normal;font-size:12px;color:#ffe36e;font-weight:700}
+.lv{display:flex;gap:2px}.lv s{flex:1;height:5px;border-radius:3px;background:#ffffff26}.lv s.on{background:linear-gradient(90deg,var(--bl),#ffe36e)}
+.buy{font-family:inherit;border:0;border-radius:14px;padding:10px 14px;min-width:82px;background:linear-gradient(180deg,var(--bl),var(--b));color:var(--bt);font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 0 var(--sh),inset 0 2px 0 #ffffff55;white-space:nowrap}
+.buy:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--sh)}
+.buy:disabled{background:linear-gradient(180deg,#8d7fb3,#6f6296);box-shadow:0 4px 0 #463c6a;color:#d9d0ee;cursor:not-allowed}
+/* заставка уровня, меню миров, вспышка молнии, затемнение при смене мира */
+#banner{position:fixed;left:0;right:0;top:24%;text-align:center;pointer-events:none;opacity:0;text-shadow:0 3px 10px #000a;z-index:4}
+#banner small{display:block;font-size:15px;letter-spacing:.2em;text-transform:uppercase;opacity:.9}
+#banner b{display:block;font-size:clamp(28px,7vw,52px);margin:4px 0;line-height:1.1}
+#banner span{display:block;font-size:16px;opacity:.92;padding:0 14px}
+#banner.show{animation:bn 3.6s ease both}
+@keyframes bn{0%{opacity:0;transform:translateY(14px) scale(.96)}14%{opacity:1;transform:none}78%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .35s;z-index:9}
+#joy{position:fixed;width:130px;height:130px;margin:-65px 0 0 -65px;border-radius:50%;background:radial-gradient(circle,#ffffff14,#ffffff2e);border:3px solid #ffffff88;box-shadow:0 0 0 4px var(--bg),inset 0 0 18px #ffffff33;display:none;pointer-events:none;z-index:2}
+#joy i{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:linear-gradient(180deg,var(--bl),var(--b));box-shadow:0 4px 0 var(--sh),inset 0 2px 0 #ffffff77}
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:3}
+#mlist{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.wc{font-family:inherit;color:#fff;text-align:left;border:2px solid #fff4;border-radius:16px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:2px;text-shadow:0 2px 4px #000a}
+.wc.cur{border-color:#fff;box-shadow:0 0 0 3px #fff4}.wc:disabled{opacity:.45;cursor:not-allowed}
+.wc b{font-size:17px}.wc span{font-size:12.5px;opacity:.92}
+#pm{z-index:6}#pm>div{touch-action:pan-y;max-width:min(92vw,440px);max-height:92vh;overflow:auto}
+#pm.main{background:radial-gradient(circle at 50% 42%,#0000,#000b)}#pm.main>div{background:transparent;border:0;box-shadow:none}
+.ttl{font-size:clamp(34px,9vw,60px);font-weight:700;line-height:1.02;margin:0;text-shadow:0 4px 0 #ff4f9a,0 10px 28px #000a}.sub{opacity:.9;margin:8px 0 14px;font-size:14px}
+.pb{display:block;width:100%;margin:9px 0 0!important;font-size:17px!important}.sr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 4px;text-align:left}
+.tg{margin:0!important;padding:6px 16px!important;font-size:14px!important;opacity:.6}.tg.on{opacity:1}.pr{width:100%;accent-color:#ff7ac6;touch-action:pan-x}
+.st{display:grid;grid-template-columns:1fr auto;gap:6px 14px;text-align:left;font-size:14px}.st b{text-align:right}
+</style></head><body>
+<div id="top"><span id="cash"></span><span id="lvl"></span><span id="load"></span><button id="menuBtn" title="Пауза">⏸</button></div>
+<div id="hint">Веди кита: на телефоне — джойстик под пальцем, на компьютере — зажми мышь или WASD · Shift/Пробел или кнопка ⚡ — рывок (в рывке не сосёт) · соси облака, вези звёзды в лавку 🍭, прокачка — на станции 🛠 · цвет облаков: от лёгких к крепким и дорогим · на каждом уровне прокачка начинается с нуля</div>
+<div id="lock" class="f"></div><div id="stam"><i></i></div><button id="sprint">⚡</button><div id="mk0" class="f mk"></div><div id="mk1" class="f mk"></div>
+<div id="shop"></div>
+<div id="banner"><small id="bn1"></small><b id="bn2"></b><span id="bn3"></span></div>
+<div id="ov"><div><h2 id="ovt"></h2><p id="ovp"></p><button id="ovb">Дальше ➜</button></div></div>
+<div id="menu"><div><h2 style="margin:0">🌍 Выбери мир</h2><div id="mlist"></div><button id="mclose">Закрыть</button></div></div>
+<div id="joy"><i></i></div><div id="flash"></div><div id="fade"></div>
+<script>window.addEventListener('error',function(e){var h=document.getElementById('hint');h.style.display='block';h.textContent='Ошибка: '+e.message})</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+if(!window.THREE){$('hint').textContent='Не загрузился three.js — нужен интернет (cdnjs.cloudflare.com).';return}
+const PI=Math.PI,H=PI/2,V3=THREE.Vector3,MAXL=3,KEY='cc3v2';
+const FREE_SELECT=true; // true — любой мир можно открыть из меню; false — миры открываются по порядку прохождения
+
+const CFG={on:1,mus:1,sfx:1,mv:.7,sv:.9,q:0};try{Object.assign(CFG,JSON.parse(localStorage.getItem('cc3cfg')))}catch(e){}
+const MOBILE=/Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)||matchMedia('(pointer:coarse)').matches;let LOW=CFG.q==1||(CFG.q!=2&&MOBILE),RD=LOW?215:330;
+// ================= сохранение и прокачка =================
+let S={cash:0,lvl:1,max:1,cap:0,spd:0,rad:0,pow:0,val:0,sta:0,dr:0,dp:0,kp:0,got:[],eq:{},st:{t:0,c:0,m:0,w:0,d:0}};
+try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)))}catch(e){}
+S.st=Object.assign({t:0,c:0,m:0,w:0,d:0},S.st);S.lvl=Math.min(MAXL,Math.max(1,S.lvl|0));S.max=Math.min(MAXL,Math.max(S.lvl,S.max|0));
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const resetRun=()=>{S.cash=0;S.cap=S.spd=S.rad=S.pow=S.val=S.sta=0;S.dr=0;S.dp=0}; // в каждом новом мире всё начинается с нуля
+const staV=()=>100+S.sta*25,capV=()=>5+S.cap*4,spdV=()=>12+S.spd*2.2,radV=()=>5+S.rad*.9,powV=()=>1+S.pow*.55,valV=()=>1+S.val*.5;
+const UP=[['cap','🎒 Трюм',100,()=>'вмест. '+capV()],['spd','🚀 Мотор',120,()=>'скор. '+spdV().toFixed(0)],['rad','🌀 Радиус',130,()=>'радиус '+radV().toFixed(1)],['pow','💪 Мощность',150,()=>'сила '+powV().toFixed(1)],['val','🍭 Цена',170,()=>'x'+valV().toFixed(1)],['sta','⚡ Рывок',100,()=>'запас '+staV()]];
+const cost=u=>Math.floor(u[2]*Math.pow(1.5,S[u[0]])*th.valM);
+const IC={cap:['#ffb36b','#ff7a45'],spd:['#6bd0ff','#3a7bff'],rad:['#b78bff','#7a4cff'],pow:['#ff8b8b','#ff4a6a'],val:['#ffe36e','#ffb02e'],sta:['#7dffb0','#2ed17a']};
+const DESC={cap:'Больше звёзд в мешке',spd:'Кит летает быстрее',rad:'Шире зона всасывания',pow:'Берёт крепкие облака',val:'Больше 🍬 за звёзду',sta:'Рывок длится дольше'};
+$('shop').innerHTML='<h3>🛠 Станция прокачки <small id="scash"></small></h3>';
+UP.forEach(u=>{const r=document.createElement('div');r.className='row';r.innerHTML='<div class="ic"></div><div class="tx"><b></b><span></span><div class="lv"></div><i></i></div><button class="buy"></button>';r.style.setProperty('--c1',IC[u[0]][0]);r.style.setProperty('--c2',IC[u[0]][1]);u.r=r;u.b=r.querySelector('.buy');u.b.onclick=()=>{const c=cost(u);if(S.cash>=c){S.cash-=c;S[u[0]]++;save();if(u[0]=='rad')buildSpin();sfx('buy');ui()}else sfx('no')};$('shop').appendChild(r)});
+const TB=[1,2,3.3,5]; // базовая «крепость» облаков четырёх тиров
+
+// ================= процедурные модели =================
+function P3(g,c,o){o=o||{};const m=new THREE.Matrix4().compose(new V3(o.x||0,o.y||0,o.z||0),new THREE.Quaternion().setFromEuler(new THREE.Euler(o.rx||0,o.ry||0,o.rz||0)),new V3(o.sx||1,o.sy||1,o.sz||1));g=g.index?g.toNonIndexed():g.clone();g.applyMatrix4(m);return{g,c:new THREE.Color(c)}}
+function merge(ps){let n=0;ps.forEach(p=>n+=p.g.attributes.position.count);const pos=new Float32Array(n*3),col=new Float32Array(n*3);let o=0;
+ ps.forEach(p=>{const a=p.g.attributes.position;pos.set(a.array,o*3);for(let i=0;i<a.count;i++){col[(o+i)*3]=p.c.r;col[(o+i)*3+1]=p.c.g;col[(o+i)*3+2]=p.c.b}o+=a.count});
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();return g}
+const EX=(s,d,b)=>new THREE.ExtrudeGeometry(s,{depth:d,bevelEnabled:!!b,bevelThickness:.05,bevelSize:.05,bevelSegments:1,curveSegments:8});
+const LA=(pts,n)=>new THREE.LatheGeometry(pts.map(a=>new THREE.Vector2(a[0],a[1])),n||14);
+function shp(f){const s=new THREE.Shape();f(s);return s}
+function starShape(n,ro,ri){return shp(s=>{for(let i=0;i<n*2;i++){const a=i*PI/n+PI/2,r=i%2?ri:ro;i?s.lineTo(Math.cos(a)*r,Math.sin(a)*r):s.moveTo(Math.cos(a)*r,Math.sin(a)*r)}s.closePath()})}
+const MAT=new THREE.MeshLambertMaterial({vertexColors:true,flatShading:true,side:2});
+const mesh=(g,m)=>new THREE.Mesh(g,m||MAT);
+const KEEP=new Set([MAT]); // общие ресурсы, которые нельзя уничтожать при смене мира
+function noisy(g,f){const a=g.attributes.position;for(let k=0;k<a.count;k++){const r=f(a.getX(k),a.getY(k),a.getZ(k));a.setXYZ(k,r[0],r[1],r[2])}return g}
+function blobGeo(seed,i,det,amp,fq,flat,fu){return noisy(new THREE.IcosahedronGeometry(1,det),(x,y,z)=>{const d=1+amp*Math.sin(x*fq+seed+i)*Math.cos(z*fq*1.1+seed*1.7)+amp*.5*Math.sin(y*fq*1.3+i);return[x*d,y<0?y*d*flat:y*d*(fu==null?1:fu),z*d]})}
+const rimShape=(seed,r,amp,k)=>shp(s=>{for(let i=0;i<=90;i++){const a=i/90*PI*2,rr=r+amp*Math.abs(Math.sin(a*k+seed));i?s.lineTo(Math.cos(a)*rr,Math.sin(a)*rr):s.moveTo(Math.cos(a)*rr,Math.sin(a)*rr)}});
+const boltShape=()=>shp(s=>{s.moveTo(.3,0);s.lineTo(-.4,-.9);s.lineTo(-.05,-.9);s.lineTo(-.4,-1.9);s.lineTo(.5,-.7);s.lineTo(.1,-.7);s.closePath()});
+const crystal=(w,h)=>LA([[.01,0],[w,h*.2],[w,h*.75],[.01,h]],6);                       // гранёный кристалл
+const gum=(c,x,y,z,s)=>P3(LA([[.01,0],[.7,0],[.85,.3],[.6,.8],[.01,1]],8),c,{x,y,z,sx:s,sy:s,sz:s}); // мармеладка
+// снежинка: 6 лучей с «веточками»
+function flakeParts(r,c,o){o=o||{};const arm=shp(s=>{const p=[[0,-.08],[.5,-.06],[.72,-.3],[.78,-.25],[.62,-.03],[.95,-.03],[1,0],[.95,.03],[.62,.03],[.78,.25],[.72,.3],[.5,.06],[0,.08]];p.forEach((q,i)=>i?s.lineTo(q[0]*r,q[1]*r):s.moveTo(q[0]*r,q[1]*r));s.closePath()}),g=EX(arm,o.d||.16),out=[];for(let i=0;i<6;i++)out.push(P3(g,c,{x:o.x||0,y:o.y||0,z:o.z||0,rz:i*PI/3+(o.rz||0)}));return out}
+// ёлочка со снежными ярусами
+function pineParts(x,y,z,s,c1,c2){const o={x,y,z,sx:s,sy:s,sz:s};return[P3(LA([[.2,0],[.2,.9]],5),'#ffffff',o),P3(LA([[.01,.7],[1.3,.7],[.85,1.6],[.01,1.95]],8),c1,o),P3(LA([[.01,1.4],[1,1.4],[.62,2.25],[.01,2.6]],8),c2,o),P3(LA([[.01,2.1],[.68,2.1],[.01,3.4]],8),'#ffffff',o)]}
+
+// ---- кит-пылесос (общий для всех миров) ----
+function buildWhale(){const w=[];
+ w.push(P3(LA([[.05,-4.2],[.4,-3.6],[.9,-2.5],[1.5,-1],[1.9,.5],[1.95,1.8],[1.5,3],[.8,3.9],[.05,4.25]],14),'#4fa3ff',{rz:-H,sz:.9}));
+ w.push(P3(LA([[.05,-3.3],[.8,-2.2],[1.5,-.8],[1.9,.5],[1.9,1.6],[1.4,2.8],[.05,3.8]],12),'#ffffff',{rz:-H,sx:.95,sz:.86,y:-.2}));
+ w.push(P3(EX(shp(s=>{s.moveTo(0,0);s.quadraticCurveTo(-.5,1.2,-2,2);s.quadraticCurveTo(-1.5,.8,-1.4,0);s.quadraticCurveTo(-1.5,-.8,-2,-2);s.quadraticCurveTo(-.5,-1.2,0,0)}),.25),'#ff7ac6',{x:-3.9,rx:H}));
+ w.push(P3(EX(shp(s=>{s.moveTo(0,0);s.quadraticCurveTo(-.2,1.4,-1.4,1.7);s.quadraticCurveTo(-1,.7,-1.6,0)}),.18),'#2f7fd8',{x:-.3,y:1.7,z:-.09}));
+ const fin=shp(s=>{s.moveTo(0,0);s.quadraticCurveTo(.3,1.2,1.8,1.7);s.quadraticCurveTo(1,.6,.9,0)});
+ w.push(P3(EX(fin,.15),'#2f7fd8',{x:.2,y:-.9,z:1.3,rx:H,rz:-.4}));w.push(P3(EX(fin,.15),'#2f7fd8',{x:.2,y:-.9,z:-1.3,rx:-H,rz:.4}));
+ const eye=shp(s=>s.absarc(0,0,.36,0,PI*2)),hl=shp(s=>s.absarc(.1,.1,.12,0,PI*2));
+ [[1.02,1],[-1.17,1]].forEach(a=>{w.push(P3(EX(eye,.15),'#22143a',{x:2.9,y:.55,z:a[0]}));w.push(P3(EX(hl,.1),'#fff',{x:2.9,y:.55,z:a[0]+(a[1]>0?.15:-.1)}))});
+ {const hp=new THREE.CatmullRomCurve3([new V3(.4,-1.6,0),new V3(.9,-2.1,0),new V3(1.4,-2.2,0)]).getPoints(12);
+  for(let i=0;i<3;i++)w.push(P3(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hp.slice(i*4,i*4+5)),4,.34,8),i%2?'#ffd23f':'#ff9ed8'));
+  w.push(P3(LA([[.4,0],[.65,-.35],[1.1,-.85],[1.3,-1]],14),'#ffd23f',{x:1.4,y:-2.2}),P3(LA([[1.18,-.97],[.6,-.3],[.3,-.02]],14),'#5a2a8a',{x:1.4,y:-2.2}),
+   P3(new THREE.TorusGeometry(1.3,.13,6,20),'#ff4f9a',{x:1.4,y:-3.2,rx:H}),P3(new THREE.TorusGeometry(.62,.07,5,14),'#fff',{x:1.4,y:-2.62,rx:H}))}
+ w.push(P3(new THREE.TorusGeometry(.2,.06,6,12),'#fff0c8',{x:-1.8,y:-1.28}));
+ w.push(P3(LA([[.95,0],[.7,.4],[.3,.9],[.04,1.2]],10),'#ff4f9a',{x:1.1,y:1.75}));
+ return merge(w)}
+const blimp=new THREE.Group(),ship=new THREE.Group();ship.add(mesh(buildWhale()));ship.scale.setScalar(.75);blimp.add(ship);
+const prop=new THREE.Group();{const bl=shp(s=>{s.moveTo(0,0);s.quadraticCurveTo(.5,.3,1.5,0);s.quadraticCurveTo(.5,-.3,0,0)}),b=EX(bl,.08);
+ prop.add(mesh(merge([0,1,2].map(i=>P3(b,'#fff35c',{rz:i*2.094,rx:PI/2})))));prop.position.set(1.1,3.05,0);ship.add(prop)}
+
+// ---- общие заготовки: звезда, камень островов, шестерни ----
+const starG=EX(starShape(5,1,.5),.5,true);starG.translate(0,0,-.25);KEEP.add(starG);
+const starM=[0,1,2,3].map(()=>{const m=new THREE.MeshLambertMaterial({color:'#fff',flatShading:true,emissive:'#fff',emissiveIntensity:.25});KEEP.add(m);return m});
+const rgG=noisy(new THREE.IcosahedronGeometry(9,2),(x,y,z)=>{const n=1+.12*Math.sin(x*1.3+z*.9)*Math.cos(y*1.1+z*1.7);y=y>0?0:y*.62;return[x*n,y*n,z*n]});KEEP.add(rgG);
+const door=shp(s=>{s.moveTo(-.6,0);s.lineTo(-.6,1);s.absarc(0,1,.6,PI,0,true);s.lineTo(.6,0)});
+function gearShape(n,ro,ri,hole){const s=new THREE.Shape(),N=n*4;for(let i=0;i<N;i++){const a=i/N*PI*2,k=i%4,r=(k==1||k==2)?ro:ri;i?s.lineTo(Math.cos(a)*r,Math.sin(a)*r):s.moveTo(Math.cos(a)*r,Math.sin(a)*r)}s.closePath();const h=new THREE.Path();h.absarc(0,0,hole,0,PI*2,true);s.holes.push(h);return s}
+// мягкая круглая точка для частиц
+const dotTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.4,'rgba(255,255,255,.75)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
+
+// ================= сцена, свет, игрок =================
+const sc=new THREE.Scene();sc.fog=new THREE.Fog('#e08fb8',100,340);
+const cam=new THREE.PerspectiveCamera(55,1,.1,700);
+const rd=new THREE.WebGLRenderer({antialias:!LOW,powerPreference:'high-performance'});rd.setPixelRatio(LOW?Math.min(1.5,devicePixelRatio):Math.min(2,devicePixelRatio));document.body.prepend(rd.domElement);
+function rs(){rd.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}addEventListener('resize',rs);rs();
+const hemi=new THREE.HemisphereLight('#c3b4ff','#5a3c9c',.75),sun=new THREE.DirectionalLight('#ffd9b8',.95),rim=new THREE.DirectionalLight('#ff9fb0',.5);sc.add(hemi,sun,rim);
+sc.add(blimp);
+const spin=new THREE.Group();sc.add(spin);let blades,disc;
+function buildSpin(){while(spin.children.length){const o=spin.children[0];spin.remove(o);o.traverse(n=>{if(n.geometry)n.geometry.dispose()})}
+ const r=radV(),c1=th.col[0],c2=th.base.pst[0],bm=(c,o)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,side:2,depthWrite:false});
+ blades=new THREE.Group();
+ for(let k=0;k<4;k++){const pts=[];for(let i=0;i<=24;i++){const u=i/24,an=k*H+u*5.2,rr=r*(1-.84*Math.pow(u,.8));pts.push(new V3(Math.cos(an)*rr,1.15*Math.pow(u,1.1),Math.sin(an)*rr))}
+  blades.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),48,.07+r*.01,5),bm(k%2?c1:'#ffffff',.72)))}
+ const cone=new THREE.Mesh(new THREE.CylinderGeometry(.3,r,1.15,28,1,true),bm('#ffffff',.09));cone.position.y=.58;blades.add(cone);
+ for(let i=0;i<3;i++){const q=new THREE.Mesh(new THREE.RingGeometry(r*.56,r*.62,20,1,i*2.094,1.25),bm(c2,.85));q.rotation.x=-H;q.position.y=.03;blades.add(q)}
+ const rim=new THREE.Mesh(new THREE.RingGeometry(r*.94,r,56),bm(c2,.9));rim.rotation.x=-H;rim.position.y=.03;spin.add(rim);
+ spin.add(blades);disc=new THREE.Mesh(new THREE.CircleGeometry(r,48),new THREE.MeshBasicMaterial({map:dotTex,color:c1,transparent:true,opacity:.55,side:2,depthWrite:false,blending:THREE.AdditiveBlending}));disc.rotation.x=-H;spin.add(disc)}
+const stack=new THREE.Group();sc.add(stack);const cm=[];
+{const fold=(g,k,m)=>noisy(g,(x,y,z)=>{const f=1+m*Math.sin(Math.atan2(z,x)*k+y*1.6);return[x*f,y,z*f]}),
+ leaf=shp(q=>{q.moveTo(0,0);q.quadraticCurveTo(.5,.7,1.05,.25);q.quadraticCurveTo(.55,-.55,0,0)}),
+ oct=shp(q=>{[[-.55,-.7],[.55,-.7],[.8,-.45],[.8,.45],[.55,.7],[-.55,.7],[-.8,.45],[-.8,-.45]].forEach((c,i)=>i?q.lineTo(c[0],c[1]):q.moveTo(c[0],c[1]));q.closePath()}),
+ ps=[P3(fold(LA([[.01,-2.3],[.8,-2.25],[1.5,-1.9],[1.95,-1.1],[2.05,-.1],[1.8,.7],[1.25,1.1],[.6,1.22]],18),7,.07),'#d9a066'),
+  P3(fold(LA([[.55,1.15],[1,1.45],[1.15,1.95],[.85,1.75],[.5,1.5]],14),5,.12),'#e8b377'),
+  P3(new THREE.TorusGeometry(.64,.11,6,16),'#fff0c8',{y:1.22,rx:H}),
+  P3(LA([[.35,0],[.01,.9]],5),'#b9783f',{x:1.5,y:-2.15,z:.8,rz:-.6}),P3(LA([[.35,0],[.01,.9]],5),'#b9783f',{x:-1.5,y:-2.15,z:-.6,rz:.6}),
+  P3(EX(oct,.14,true),'#7ff0c8',{y:-.7,z:2}),P3(EX(starShape(5,.45,.2),.1),'#ffd84d',{y:-.7,z:2.12}),
+  P3(EX(leaf,.1),'#ff4f9a',{x:.08,y:1.25,z:.62,rz:.25}),P3(EX(leaf,.1),'#ff4f9a',{x:-.08,y:1.25,z:.62,sx:-1,rz:-.25}),gum('#ff4f9a',0,1.12,.66,.25)];
+ for(let i=0;i<9;i++){const an=-.9+i*.225;ps.push(P3(new THREE.BoxGeometry(.2,.05,.05),'#fff0c8',{x:Math.sin(an)*1.1,y:-.7+Math.cos(an*3)*.06,z:2.04,ry:0}))}
+ const sm=new THREE.Mesh(merge(ps),new THREE.MeshLambertMaterial({vertexColors:true,flatShading:true,side:2,transparent:true,opacity:.66}));sm.renderOrder=2;stack.add(sm)}
+const beamG=new THREE.BufferGeometry(),bp=new Float32Array(40*6);beamG.setAttribute('position',new THREE.BufferAttribute(bp,3));
+const beams=new THREE.LineSegments(beamG,new THREE.LineBasicMaterial({color:'#fff'}));beams.frustumCulled=false;sc.add(beams);
+const trail=[];for(let i=0;i<20;i++){const m=mesh(starG,starM[i%4]);m.scale.setScalar(.01);m.visible=false;sc.add(m);trail.push({m,l:0})}
+
+// ================= облака: формы шести видов для каждого мира =================
+const ring8=[0,1,2,3,4,5,6,7].map(i=>[Math.cos(i*PI/4)*1.4,0,Math.sin(i*PI/4)*1.4,.6]);
+const spi=[0,1,2,3,4,5,6].map(i=>[Math.cos(i*.9)*(.1+i*.28),i*.1,Math.sin(i*.9)*(.1+i*.28),.95-i*.1]);
+const arms=[[0,0,0,.9]].concat([0,1,2,3,4].map(i=>[Math.cos(i*1.2566)*1.5,0,Math.sin(i*1.2566)*1.5,.55]));
+// мир 1: пушистое, полоса, бублик, башня, спираль, звезда
+const LOB1=[[[0,0,0,1],[-.95,-.2,.1,.7],[1,-.2,-.1,.75],[.1,.6,0,.7],[0,-.1,.9,.6],[-.3,-.1,-.85,.6]],[[-1.8,0,0,.6],[-.9,.1,0,.85],[0,.15,0,1],[.9,.1,.1,.85],[1.8,0,0,.6],[2.5,-.1,0,.4]],ring8,[[0,-.3,0,1],[0,.7,0,.8],[0,1.5,0,.6],[0,2.1,0,.4],[.7,-.1,.3,.5],[-.7,-.1,-.2,.5]],spi,arms];
+// мир 2: сугроб, две вершины, ледяной венок, снежная башня, спираль, снежинка
+const LOB2=[[[0,0,0,1.15],[-1.2,-.25,.1,.8],[1.25,-.25,-.1,.8],[0,.55,0,.75],[.3,-.2,1.05,.6],[-.4,-.2,-1,.6],[-2,-.3,0,.45],[2.1,-.3,0,.45]],
+ [[-.9,0,0,1],[.9,.25,0,1.1],[0,-.1,.1,.9],[-.9,.9,0,.55],[.9,1.2,0,.6],[0,.5,.9,.45]],
+ [0,1,2,3,4,5,6,7,8,9].map(i=>[Math.cos(i*PI/5)*1.55,0,Math.sin(i*PI/5)*1.55,.5]),
+ [[0,-.35,0,1.15],[.1,.5,0,.85],[-.05,1.2,0,.62],[0,1.75,0,.4],[.9,-.3,.4,.55],[-.9,-.2,-.3,.5]],
+ spi,[[0,0,0,.85]].concat([0,1,2,3,4,5].map(i=>[Math.cos(i*PI/3)*1.55,0,Math.sin(i*PI/3)*1.55,.5]))];
+// мир 3: грозовая башня, наковальня, облачный вал, двойные колонны, ураган, грозовой шар
+const LOB3=[[[0,-.2,0,1.1],[-.8,.4,.1,.85],[.9,.5,0,.9],[0,1.2,0,.9],[.3,1.9,0,.65],[-.4,.1,.9,.6],[.2,0,-.9,.65]],
+ [[0,-.2,0,.9],[0,.6,0,.8],[-1.5,1.2,0,.7],[-.7,1.3,0,.8],[.2,1.4,0,.85],[1,1.3,0,.8],[1.8,1.15,0,.65],[0,1.35,.8,.6]],
+ [[-2.4,0,0,.65],[-1.5,.15,0,.85],[-.5,.3,.1,.95],[.6,.25,0,.9],[1.6,.1,0,.8],[2.5,-.05,0,.6],[0,.9,0,.6]],
+ [[-.8,-.2,0,.85],[-.8,.7,0,.7],[-.8,1.5,0,.55],[.8,-.2,0,.9],[.8,.9,0,.75],[.8,1.8,0,.6],[.8,2.5,0,.4]],
+ spi,[[0,.2,0,1.2]].concat([0,1,2,3,4,5,6].map(i=>[Math.cos(i*.8976)*1.6,0,Math.sin(i*.8976)*1.6,.6]))];
+
+const NP=10;
+{const hs=[0,1,2,3,4,5,6].map(i=>{const a=i/6*PI;return[Math.cos(a)*1.9,(i%2)*.1,-Math.sin(a)*1.9,.62+.25*Math.sin(a)]}), // подкова
+ st=[0,1,2,3,4,5].map(i=>[i*.8-2,i*.45-.5,(i%2)*.15,.95-i*.07]), // лесенка
+ wv=[0,1,2,3,4,5,6,7,8].map(i=>[i*.55-2.2,Math.sin(i*.9)*.45,Math.cos(i*.9)*.4,.6+.2*Math.sin(i*.5+1)]), // волна-змейка
+ ht=[[-.8,0,-.6,.85],[.8,0,-.6,.85],[-1,0,.1,.8],[1,0,.1,.8],[-.5,.1,.9,.65],[.5,.1,.9,.65],[0,.5,-.3,.7],[0,0,1.6,.5]]; // сердечко
+ [LOB1,LOB2,LOB3].forEach(L=>L.push(hs,st,wv,ht))}
+// Мир 1 — «Сахарный закат»: пухлые леденцовые облака, капли, звёздочки и молнии
+function cloudL1(seed,tier,pat){const ps=[];
+ LOB1[pat].forEach((q,i)=>ps.push(P3(blobGeo(seed,i,1,.24,3,.5),th.col[tier],{x:q[0],y:q[1],z:q[2],sx:q[3],sy:q[3],sz:q[3]})));
+ if(tier==1)for(let i=0;i<3;i++)ps.push(P3(LA([[.01,-.7],[.12,-.4],[.2,-.1],[.15,.1],[.01,.15]],6),'#7fd0ff',{x:(i-1)*.7,y:-.95,z:(i%2)*.4-.2}));
+ if(tier==2)ps.push(P3(EX(starShape(5,.55,.25),.2),'#fff',{y:pat==3?2.9:1.55,x:.1,z:-.1,rz:.3}));
+ if(tier==3)ps.push(P3(EX(boltShape(),.2),'#fff35c',{y:-.5,z:-.1}));
+ return merge(ps)}
+// Мир 2 — «Мятная аврора»: гранёные ледяные облака с блёстками, сосульками, кристаллами и снежинками
+function cloudL2(seed,tier,pat){const ps=[],base=new THREE.Color(th.col[tier]),wh=new THREE.Color('#ffffff'),top=[1.4,1.9,.9,2.35,1,1,1.4,2.2,1.1,1.2][pat];
+ LOB2[pat].forEach((q,i)=>ps.push(P3(blobGeo(seed,i,1,.34,4.4,.55),base.clone().lerp(wh,(i%3)*.1+(q[1]>.4?.12:0)),{x:q[0],y:q[1],z:q[2],sx:q[3],sy:q[3],sz:q[3]})));
+ if(tier==0){ps.push(P3(EX(starShape(4,.42,.11),.1),'#ffffff',{x:.3,y:top+.15,z:0}),P3(EX(starShape(4,.3,.08),.1),'#bfefff',{x:-.7,y:top-.35,z:.3,rz:.5}))}
+ if(tier==1)for(let i=0;i<4;i++)ps.push(P3(LA([[.01,-1.15],[.1,-.6],[.2,-.1],[.16,.15],[.01,.2]],6),i%2?'#a8f0de':'#e6f9ff',{x:(i-1.5)*.55,y:-.85,z:(i%2)*.5-.25}));
+ if(tier==2)ps.push(P3(crystal(.3,1.5),'#9fe3ff',{x:.1,y:top-.4,z:0}),P3(crystal(.22,1),'#d8f6ff',{x:-.55,y:top-.5,z:.1,rz:.4}),P3(crystal(.2,.9),'#7fd0ff',{x:.65,y:top-.5,z:-.1,rz:-.4}));
+ if(tier==3){flakeParts(1,'#ffffff',{x:0,y:top+1.15,z:0}).forEach(p=>ps.push(p));ps.push(P3(crystal(.2,.9),'#f0d4ff',{x:-.7,y:top-.5,z:.1,rz:.45}),P3(crystal(.2,.9),'#f0d4ff',{x:.7,y:top-.5,z:-.1,rz:-.45}))}
+ return merge(ps)}
+// Мир 3 — «Грозовая карамель»: тяжёлые грозовые облака, карамельные капли, дождевые шторы, молнии и корона
+function cloudL3(seed,tier,pat){const ps=[],base=new THREE.Color(th.col[tier]),hi=new THREE.Color(th.hi[tier]),dk=new THREE.Color('#2a1238'),top=[2.2,2.2,1.55,2.9,1,1.45,1.6,3,1.4,1.7][pat];
+ LOB3[pat].forEach((q,i)=>{const k=Math.min(1,Math.max(0,(q[1]+.3)/2));ps.push(P3(blobGeo(seed,i,1,.34,3.2,.4),base.clone().lerp(hi,k*.65).lerp(dk,(1-k)*(tier>1?.22:.08)),{x:q[0],y:q[1],z:q[2],sx:q[3],sy:q[3],sz:q[3]}))});
+ if(tier==0)for(let i=0;i<4;i++)ps.push(P3(LA([[.01,-.6],[.15,-.35],[.21,0],[.13,.18],[.01,.22]],6),'#ffa63d',{x:(i-1.5)*.5,y:-.8,z:(i%2)*.5-.25}));
+ if(tier==1)for(let i=0;i<3;i++)ps.push(P3(LA([[.01,-2.1],[.05,-1.2],[.13,0],[.01,.1]],5),'#fff0c8',{x:(i-1)*.75,y:-.7,z:(i%2)*.4-.2}));
+ if(tier==2)ps.push(P3(EX(boltShape(),.2),'#ffd23f',{x:.2,y:-.45,z:-.1,sx:.85,sy:.85}));
+ if(tier==3)ps.push(P3(EX(boltShape(),.2),'#ffffff',{x:-.8,y:-.4,z:-.1,sx:1.1,sy:1.1}),P3(EX(boltShape(),.2),'#fff35c',{x:.9,y:-.5,z:.1}),P3(EX(starShape(5,.55,.25),.2),'#ffd23f',{x:0,y:top+.2,z:-.1,rz:.3}));
+ return merge(ps)}
+
+// ================= далёкие горы/башни, море облаков, парящие острова =================
+function puffTower(seed,cs){const ps=[];for(let i=0;i<5;i++)ps.push(P3(blobGeo(seed,i,1,.25,3,1),cs[i],{x:Math.sin(seed+i)*.5,y:i*1.1,sx:1.6-i*.2,sy:1.2,sz:1.6-i*.2}));return merge(ps)}
+function spireGeo(seed){const ps=[],cs=['#5f8fe0','#8fc2ff','#cfeaff'];for(let i=0;i<3;i++){const h=7+i*2.5+(seed%3)*1.5,w=2.2-i*.35,x=Math.sin(seed*2+i*2)*1.6,z=Math.cos(seed+i)*.9,sd=5+((seed+i)%2),o={x,z,rz:Math.sin(seed+i)*.1};
+ ps.push(P3(LA([[w*1.5,-1],[w,h*.35],[w*.55,h*.7],[.01,h]],sd),cs[i],o),P3(LA([[w*.62,h*.68],[.01,h*1.02]],sd),'#ffffff',o))}return merge(ps)}
+function stormTower(seed){const cs=['#ff8a3d','#c2486a','#7a2f6a','#432452','#2a1238'],ps=[];for(let i=0;i<5;i++)ps.push(P3(blobGeo(seed,i,1,.28,3,1),cs[i],{x:Math.sin(seed+i)*.6,y:i*1.25,sx:1.2+i*.3,sy:1.25,sz:1.2+i*.3}));return merge(ps)}
+function seaGeo(){const ps=[],cl=th.sea.pal,tint=new THREE.Color(th.sea.tint);for(let i=0;i<(LOW?300:520);i++){const g=blobGeo(i*1.7,0,1,.25,3,.4,.4),an=Math.random()*6.283,r=Math.sqrt(Math.random())*(th.R+330),s=20+Math.random()*24;
+ ps.push(P3(g,new THREE.Color(cl[i%4]).lerp(tint,Math.random()*th.sea.mix),{x:Math.cos(an)*r,y:th.sea.y+Math.random()*8,z:Math.sin(an)*r,sx:s,sy:s,sz:s,ry:Math.random()*6}))}return merge(ps)}
+// остров мира 1: сиреневый камень, мятная глазурь, леденцы
+function islandL1(seed){const g=noisy(new THREE.IcosahedronGeometry(8,1),(x,y,z)=>{const n=1+.15*Math.sin(x*.9+seed)*Math.cos(z*.8+seed);y=y>0?0:y*.65;return[x*n,y*n,z*n]});
+ const ps=[P3(g,'#b9a3ff'),P3(EX(rimShape(seed,8.2,.35,6),.5,true),'#7ff0c8',{y:-.4,rx:-H})];
+ for(let i=0;i<3+seed%3;i++){const an=i*2.3+seed,d=2+((i*5+seed)%4),x=Math.cos(an)*d,z=Math.sin(an)*d,hh=2+(i%3);ps.push(P3(LA([[.25,0],[.2,hh]],5),'#ffffff',{x,y:.3,z}));ps.push(P3(LA([[.01,hh-.2],[.9,hh-.2],[1.5,hh+.4],[1.1,hh+1.6],[.01,hh+2.8]],8),['#ff8fcf','#ffd84d','#8fe3ff'][i%3],{x,y:.3,z}))}
+ return merge(ps)}
+// остров мира 2: ледяная глыба с сосульками, заснеженные ёлочки, кристаллы
+function islandL2(seed){const g=noisy(new THREE.IcosahedronGeometry(8,1),(x,y,z)=>{const n=1+.15*Math.sin(x*.9+seed)*Math.cos(z*.8+seed);y=y>0?0:y*.65*(1+.35*Math.abs(Math.sin(x*.5+seed)));return[x*n,y*n,z*n]});
+ const ps=[P3(g,'#cfe8ff'),P3(EX(rimShape(seed,8.2,.35,6),.5,true),'#8ff5d8',{y:-.4,rx:-H})];
+ for(let i=0;i<5;i++){const an=i*1.3+seed,d=1.5+(i*3+seed)%4;ps.push(P3(LA([[.9,0],[.5,-1.8],[.01,-3.8-(i%3)]],6),'#b4defa',{x:Math.cos(an)*d,y:-3.6,z:Math.sin(an)*d}))}
+ for(let i=0;i<2+seed%3;i++){const an=i*2.4+seed,d=2.4+((i*5+seed)%3)*1.2;pineParts(Math.cos(an)*d,.3,Math.sin(an)*d,.8+(i%3)*.2,'#58d9b4','#7fe8c8').forEach(p=>ps.push(p))}
+ for(let i=0;i<3;i++){const an=seed*1.7+i*.5+4,x=Math.cos(an)*5,z=Math.sin(an)*5;ps.push(P3(crystal(.35,1.4+i*.5),['#8fd8ff','#d8f6ff','#9ff3dc'][i],{x:x+i*.35,y:.3,z:z+i*.2,rz:(i-1)*.3}))}
+ return merge(ps)}
+// остров мира 3: шоколадный камень, карамельная глазурь, леденцовые кристаллы и вулканчик
+function islandL3(seed){const g=noisy(new THREE.IcosahedronGeometry(8,1),(x,y,z)=>{const n=1+.18*Math.sin(x*.9+seed)*Math.cos(z*.8+seed);y=y>0?0:y*.7;return[x*n,y*n,z*n]});
+ const ps=[P3(g,'#5b3329'),P3(EX(rimShape(seed,8.2,.5,5),.5,true),'#ffa63d',{y:-.4,rx:-H})],cc=['#ffb347','#ff7a3d','#ff4f6a','#ffd23f'];
+ for(let i=0;i<4;i++){const an=i*1.7+seed,d=2.5+((i*3+seed)%3)*1.3;ps.push(P3(crystal(.55,2.2+(i%3)*.9),cc[i%4],{x:Math.cos(an)*d,y:.3,z:Math.sin(an)*d,rz:Math.sin(an+i)*.35,rx:Math.cos(an)*.2}))}
+ if(seed%2){ps.push(P3(LA([[3,0],[2.4,1.2],[1.4,2.6],[.9,3.2],[1.35,3.3],[.01,3.1]],10),'#3b1f1c',{x:-3,y:.3,z:-1}),P3(LA([[.9,3.15],[1.2,3.3],[.01,3.55]],10),'#ff6a2d',{x:-3,y:.3,z:-1}))}
+ else{for(let i=0;i<3;i++)ps.push(P3(EX(shp(s=>s.absarc(0,0,.8+i*.15,0,PI*2)),.3,true),['#c98a4b','#a86a35','#e0a860'][i],{x:-2+i*2.4,y:.3,z:3-i*1.6,rx:-H,rz:i}))}
+ for(let i=0;i<4;i++){const an=i*1.6+seed;ps.push(P3(LA([[.8,0],[.5,-1.8],[.01,-4.2-(i%3)]],6),'#3a2020',{x:Math.cos(an)*(1.5+i%3),y:-3.8,z:Math.sin(an)*(1.5+i%3)}))}
+ return merge(ps)}
+
+// ================= частицы, погода и небесные эффекты =================
+// падающие/взлетающие точки вокруг игрока (снег, искры, угольки)
+function mkFall(o){const n=LOW?Math.ceil(o.n*.55):o.n,bx=new Float32Array(n),bz=new Float32Array(n),by=new Float32Array(n),ph=new Float32Array(n),sp=new Float32Array(n),pos=new Float32Array(n*3),rg=o.y1-o.y0;
+ for(let i=0;i<n;i++){bx[i]=Math.random()*o.w;bz[i]=Math.random()*o.w;by[i]=o.y0+Math.random()*rg;ph[i]=Math.random()*6.283;sp[i]=.6+Math.random()*.8}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ const m=new THREE.PointsMaterial({color:o.color,size:o.size,map:dotTex,transparent:true,opacity:o.opacity,depthWrite:false,blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending});
+ const pts=new THREE.Points(g,m);pts.frustumCulled=false;
+ return{obj:pts,update(P,t,dt){const w=o.w;for(let i=0;i<n;i++){by[i]+=o.vy*sp[i]*dt;if(by[i]>o.y1)by[i]-=rg;if(by[i]<o.y0)by[i]+=rg;
+   pos[i*3]=P.x+(((bx[i]-P.x)%w)+w)%w-w/2+Math.sin(t*.7+ph[i])*o.sway;pos[i*3+1]=by[i];pos[i*3+2]=P.z+(((bz[i]-P.z)%w)+w)%w-w/2}
+  g.attributes.position.needsUpdate=true;m.opacity=o.opacity*(o.pulse?.75+.25*Math.sin(t*3):1)}}}
+// дождь: короткие наклонные штрихи
+function mkRain(n,w){n=LOW?Math.ceil(n*.55):n;const bx=new Float32Array(n),bz=new Float32Array(n),by=new Float32Array(n),pos=new Float32Array(n*6);
+ for(let i=0;i<n;i++){bx[i]=Math.random()*w;bz[i]=Math.random()*w;by[i]=-10+Math.random()*55}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:'#ffd8b0',transparent:true,opacity:.38}));l.frustumCulled=false;
+ return{obj:l,update(P,t,dt){for(let i=0;i<n;i++){by[i]-=85*dt;if(by[i]<-10)by[i]+=55;const x=P.x+(((bx[i]-P.x)%w)+w)%w-w/2,z=P.z+(((bz[i]-P.z)%w)+w)%w-w/2;
+   pos[i*6]=x;pos[i*6+1]=by[i];pos[i*6+2]=z;pos[i*6+3]=x-.6;pos[i*6+4]=by[i]+3.4;pos[i*6+5]=z}g.attributes.position.needsUpdate=true}}}
+// звёзды на небе (две «мерцающие» группы)
+function mkStars(n){n=LOW?Math.ceil(n*.55):n;const p=new Float32Array(n*3),c=new Float32Array(n*3),col=new THREE.Color(),tn=['#ffffff','#cfeaff','#d8fff4','#ffe9f7'];
+ for(let i=0;i<n;i++){const az=Math.random()*PI*2,el=Math.pow(Math.random(),1.7)*1.25+.02;p[i*3]=Math.cos(az)*Math.cos(el)*480;p[i*3+1]=Math.sin(el)*480;p[i*3+2]=Math.sin(az)*Math.cos(el)*480;col.set(tn[i%4]);c[i*3]=col.r;c[i*3+1]=col.g;c[i*3+2]=col.b}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(c,3));
+ return new THREE.Points(g,new THREE.PointsMaterial({size:2.6,sizeAttenuation:false,vertexColors:true,map:dotTex,transparent:true,depthWrite:false,fog:false}))}
+// северное сияние: волнистая светящаяся занавесь
+function mkAurora(c1,c2,off,ph){const nx=90,ny=14,pos=[],uv=[],idx=[];
+ for(let j=0;j<=ny;j++)for(let i=0;i<=nx;i++){const u=i/nx,v=j/ny,an=-1.35+u*2.7+Math.sin(u*5+off)*.1,R=430;pos.push(Math.sin(an)*R,10+v*150+Math.sin(u*7+off)*22,-Math.cos(an)*R);uv.push(u,v)}
+ for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const a=j*(nx+1)+i,b=a+1,c=a+nx+1,d=c+1;idx.push(a,b,c,b,d,c)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);
+ const m=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:2,fog:false,blending:THREE.AdditiveBlending,uniforms:{t:{value:0},c1:{value:new THREE.Color(c1)},c2:{value:new THREE.Color(c2)},ph:{value:ph}},
+  vertexShader:'varying vec2 vUv;uniform float t;uniform float ph;void main(){vUv=uv;vec3 p=position;p.y+=sin(uv.x*20.+t*.6+ph)*8.*uv.y;p.x+=sin(uv.x*9.-t*.4+ph)*10.*uv.y;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}',
+  fragmentShader:'varying vec2 vUv;uniform float t;uniform float ph;uniform vec3 c1;uniform vec3 c2;void main(){float ray=.55+.45*sin(vUv.x*70.+sin(vUv.x*13.+t*.5+ph)*3.+t*.3);float fb=smoothstep(0.,.12,vUv.y);float ft=pow(1.-vUv.y,1.6);float band=.6+.4*sin(vUv.x*3.+t*.2+ph);vec3 c=mix(c1,c2,vUv.y);gl_FragColor=vec4(c*(.8+.6*ray),fb*ft*ray*band*.8);}'});
+ const me=new THREE.Mesh(g,m);me.frustumCulled=false;return me}
+// молния: плоская зигзагообразная вспышка с веточкой
+function mkBoltGeo(){const mk=(x0,y0,y1,n,dx,w)=>{const L=[],Rr=[];let x=x0;for(let i=0;i<=n;i++){const y=y0+(y1-y0)*i/n,ww=w*(1-i/n*.7)+.002;L.push([x-ww,y]);Rr.push([x+ww,y]);x+=(Math.random()-.5)*dx}return{L,R:Rr,xe:x}};
+ const a=mk(0,0,-1,10,.3,.012),b=mk(a.L[4][0]+.012,a.L[4][1],-.75,6,.28,.007);
+ const sh=q=>shp(s=>{q.L.forEach((p,i)=>i?s.lineTo(p[0],p[1]):s.moveTo(p[0],p[1]));q.R.slice().reverse().forEach(p=>s.lineTo(p[0],p[1]));s.closePath()});
+ return new THREE.ShapeGeometry([sh(a),sh(b)])}
+
+// ================= три мира =================
+// Каждый мир — полный набор: небо, туман, свет, облака, остров-лавка, станция, горы, море, декор, погода, цвета интерфейса.
+const LV=[
+{ // ---------- 1. Сахарный закат ----------
+ name:'Сахарный закат',tag:'Розовые облака, леденцы и тёплый закат',
+ hud:{bg:'rgba(60,30,110,.85)',b:'#ff7ac6',bl:'#ff9ed8',bt:'#3a0f45',sh:'#b3427f',p1:'rgba(104,52,196,.96)',p2:'rgba(34,18,92,.97)',edge:'#ffb6e6'},
+ card:'linear-gradient(160deg,#ffb98f,#f58fb0 38%,#a463c8 72%,#41309f)',
+ R:152,total:700,needM:1,valM:1,
+ col:['#ff9ed8','#8fe3ff','#c9a0ff','#ffd84d'],cloud:cloudL1,
+ sky:[[0,'#ffb98f'],[.04,'#f58fb0'],[.2,'#a463c8'],[.5,'#41309f'],[1,'#17155c']],below:'#47379a',fog:'#e08fb8',fogN:100,fogF:340,
+ hemi:['#c3b4ff','#5a3c9c',.75],sun:['#ffd9b8',.95,[20,40,10]],rim:['#ff9fb0',.5,[0,10,-60]],
+ discs:[[34,'#fff4c2',1],[62,'#ffd29a',.35],[110,'#ff9fb0',.18],[180,'#ff8fb8',.1]],discX:0,discY:12,
+ tower:s=>puffTower(s,['#6f4fb8','#a763c2','#d77fb8','#ff9fa8','#ffcfa0']),towerS:[9,10],towerY:-45,
+ sea:{pal:['#9a8be0','#b48ad8','#7fa0e8','#d49ad8'],tint:'#ffe0d0',mix:.45,y:-48},
+ island:islandL1,conf:()=>[0,1,2,3].map(i=>({g:starG,m:starM[i]})),confS:[.5,.6],
+ fx(){const f=mkFall({n:500,w:300,y0:-25,y1:25,vy:.5,sway:1.5,size:1.8,color:'#ffffff',opacity:.8,add:true,pulse:true});return{objs:[f.obj],update:f.update}},
+ base:{rock:'#a98bff',frost:'#ff8fcf',body:'#fff6fb',roof:'#ff4f9a',door:'#7a3cff',win:'#ffd23f',cane:['#ffffff','#ff3d5a'],gum:['#ff8fcf','#ffd84d','#8fe3ff','#b6f5a8','#ff9b6b'],pad:'#ffffff',pst:['#ffd84d','#fff6b0'],lol:['#ffa3dc','#8fe3ff'],
+  bodyP:[[2.7,0],[3,1],[2.6,2.4],[2,3.2]],roofP:[[3.2,3],[2.4,3.6],[1.5,4.7],[.6,5.8],[.02,6.6]],poleY:6.8,
+  orn:y=>[P3(EX(starShape(8,1.6,1.1),.3),'#ff3d8a',{x:-3,y,z:-2}),P3(EX(starShape(8,.9,.5),.3),'#fff',{x:-3,y,z:-1.8})],extra(){},
+  st:{rock:'#7a8cff',frost:'#5fe0d0',tower:'#7a3cff',band:'#ffd23f',star:'#fff6b0',pad:['#8fe3ff','#ffffff'],gA:'#ffd23f',gB:'#ff7ac6'}},
+ intro:'Облака мягкие, как зефир. Пока что...'
+},
+{ // ---------- 2. Мятная аврора ----------
+ name:'Мятная аврора',tag:'Ледяная ночь, северное сияние и снегопад',
+ hud:{bg:'rgba(10,44,86,.88)',b:'#7ff0d4',bl:'#b4fbe9',bt:'#06323a',sh:'#2a9a8a',p1:'rgba(36,120,170,.96)',p2:'rgba(10,36,84,.97)',edge:'#bff7ee'},
+ card:'linear-gradient(160deg,#c9fbef,#5fd0c8 30%,#1f6aa0 62%,#0a1236)',
+ R:192,total:900,needM:1.15,valM:1.4,
+ col:['#f2fbff','#8ff0cf','#7cc4ff','#d48bff'],cloud:cloudL2,
+ sky:[[0,'#c9fbef'],[.03,'#7fe0d0'],[.1,'#2f8fb8'],[.22,'#1a4a90'],[.5,'#0e2060'],[1,'#080f30']],below:'#2b4f92',fog:'#6fc6d2',fogN:90,fogF:320,
+ hemi:['#bfe6ff','#2c4a8a',.85],sun:['#cfe8ff',.9,[-20,40,10]],rim:['#7fffd8',.55,[0,10,-60]],
+ discs:[[34,'#e8fff8',.22],[60,'#aef0e0',.12],[110,'#7fd8d8',.07]],discX:-70,discY:46,
+ tower:spireGeo,towerS:[6,6],towerY:-45,
+ sea:{pal:['#5aa8d8','#7fc8e8','#4a90c8','#a0d8f0'],tint:'#ffffff',mix:.3,y:-48},
+ island:islandL2,confS:[1.1,1.2],
+ conf:()=>['#ffffff','#9ff3dc','#bfe3ff'].map(c=>({g:merge(flakeParts(1,c,{d:.2})),m:MAT})),
+ far(g){ // полумесяц
+  const cr=shp(s=>{s.absarc(0,0,24,.934,2*PI-.934,false);s.absarc(9,0,20,4.98,1.30,true);s.closePath()});
+  const m=new THREE.Mesh(new THREE.ShapeGeometry(cr),new THREE.MeshBasicMaterial({color:'#f4fff9',fog:false,side:2}));m.position.set(-70,46,-436);g.add(m)},
+ fx(){const st1=mkStars(450),st2=mkStars(450),a1=mkAurora('#33ff99','#33b3ff',0,0),a2=mkAurora('#66ffcc','#e066ff',2.1,1.7),sky2=new THREE.Group();sky2.add(st1,st2,a1,a2);
+  const snow=mkFall({n:650,w:240,y0:-12,y1:48,vy:-5,sway:2.2,size:1.9,color:'#ffffff',opacity:.9});
+  return{objs:[sky2,snow.obj],follow:sky2,update(P,t,dt){a1.material.uniforms.t.value=t;a2.material.uniforms.t.value=t;st1.material.opacity=.65+.35*Math.sin(t*1.7);st2.material.opacity=.65+.35*Math.sin(t*1.7+PI);snow.update(P,t,dt)}}},
+ base:{rock:'#bfe3ff',frost:'#8ff5d8',body:'#f4fcff',roof:'#4fb8e8',door:'#2f6fd0',win:'#9ff3dc',cane:['#ffffff','#3fb0e0'],gum:['#9ff3dc','#bfe3ff','#ffffff','#c9a8ff','#7fd0ff'],pad:'#eaf8ff',pst:['#8ff5d8','#e6fff8'],lol:['#9ff3dc','#a8c8ff'],
+  bodyP:[[2.7,0],[3,1],[2.6,2.4],[2,3.2]],roofP:[[3.2,3],[2.5,3.5],[2.9,4],[2,4.6],[2.4,5.1],[1.4,5.8],[1.7,6.1],[.02,7]],poleY:7,
+  orn:y=>flakeParts(2,'#ffffff',{x:-3,y,z:-2,d:.3}).concat(flakeParts(1.1,'#8ff5d8',{x:-3,y,z:-1.7,rz:PI/6,d:.3})),
+  extra(ex){[[6.6,-1.8,1.05],[3,-6.8,.85],[-7.2,.5,.9],[3.5,6.9,.8]].forEach(q=>pineParts(q[0],.3,q[1],q[2],'#58d9b4','#7fe8c8').forEach(p=>ex.push(p)));
+   [[-1.5,-7,1.6],[7.2,-3.8,1.2],[-6.8,-5.2,1.4]].forEach((q,i)=>ex.push(P3(crystal(.4,q[2]+.4),['#8fd8ff','#d8f6ff','#9ff3dc'][i],{x:q[0],y:.3,z:q[1],rz:(i-1)*.25})))},
+  st:{rock:'#9fc8f0',frost:'#9ff3dc',tower:'#3d6fd8',band:'#d8f6ff',star:'#e6fff8',pad:['#9ff3dc','#ffffff'],gA:'#cfeaff',gB:'#7fffd8'}},
+ intro:'Тихо. Только снег и сияние над облаками.'
+},
+{ // ---------- 3. Грозовая карамель ----------
+ name:'Грозовая карамель',tag:'Огненный горизонт, гроза и карамельный дождь',
+ hud:{bg:'rgba(70,24,34,.88)',b:'#ffb347',bl:'#ffd38a',bt:'#4a1a05',sh:'#b36a1a',p1:'rgba(140,60,50,.96)',p2:'rgba(52,18,40,.97)',edge:'#ffc98a'},
+ card:'linear-gradient(160deg,#ffc15a,#ff7a3a 30%,#8a2a58 62%,#1c0a2c)',
+ R:233,total:1100,needM:1.3,valM:1.8,
+ col:['#ffe3b0','#ffc94d','#8a64d8','#4b3f9e'],hi:['#fff4d8','#fff0a8','#c8a8ff','#8f86e8'],cloud:cloudL3,
+ sky:[[0,'#ffc15a'],[.03,'#ff7a3a'],[.1,'#b8384e'],[.22,'#5a2058'],[.5,'#2a1038'],[1,'#120720']],below:'#4a1f4a',fog:'#c8663f',fogN:80,fogF:300,
+ hemi:['#ffb78a','#3a1c4a',.62],sun:['#ffb060',1,[30,25,-10]],rim:['#ff6a3d',.6,[0,10,-60]],
+ discs:[[46,'#ffe08a',.9],[90,'#ff9a4a',.3],[170,'#ff6a3a',.15],[260,'#ff5a3a',.08]],discX:0,discY:-4,
+ tower:stormTower,towerS:[10,10],towerY:-50,
+ sea:{pal:['#7a3a4a','#a8503f','#5a2a4a','#d0804a'],tint:'#ffb070',mix:.35,y:-48},
+ island:islandL3,confS:[.8,.9],
+ conf:()=>['#ffb347','#ff7a3d','#ff4f6a'].map(c=>({g:merge([P3(crystal(.5,1.8),c)]),m:MAT})).concat([{g:starG,m:starM[1]}]),
+ fx(){const rain=mkRain(320,200),emb=mkFall({n:160,w:200,y0:-10,y1:40,vy:3,sway:3,size:2.2,color:'#ffb347',opacity:.9,add:true}),bm=new THREE.MeshBasicMaterial({color:'#fff6d0',fog:false,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:2}),bolts=[0,1,2].map(()=>{const m=new THREE.Mesh(mkBoltGeo(),bm);m.visible=false;m.frustumCulled=false;return m});
+  let nextT=1.6,left=0,pend=0;
+  const fire=P=>{const b=bolts[(Math.random()*3)|0];b.position.set(P.x+(Math.random()*2-1)*220,240,P.z-340-Math.random()*70);b.scale.set(190+Math.random()*80,300,1);b.scale.x*=Math.random()<.5?-1:1;b.visible=true;bolts.forEach(o=>{if(o!==b)o.visible=false});left=.22;flash=1;pend=.13;setTimeout(()=>sfx('thunder'),250+Math.random()*400)};
+  return{objs:[rain.obj,emb.obj].concat(bolts),update(P,t,dt){rain.update(P,t,dt);emb.update(P,t,dt);
+   nextT-=dt;if(nextT<=0){nextT=2.5+Math.random()*6;fire(P)}
+   if(pend>0){pend-=dt;if(pend<=0)flash=Math.max(flash,.75)}
+   if(left>0){left-=dt;if(left<=0)bolts.forEach(o=>o.visible=false)}}}},
+ base:{rock:'#6a3a2e',frost:'#ffa63d',body:'#ffe6c0',roof:'#8a4a2f',door:'#2a1238',win:'#ffd23f',cane:['#ffe9c8','#8a4a2f'],gum:['#ffa63d','#ff6a3d','#ffd23f','#c2486a','#8a4a2f'],pad:'#ffe6c0',pst:['#ffb347','#ffe58a'],lol:['#ffa63d','#c2486a'],
+  bodyP:[[2.7,0],[3,1],[2.6,2.4],[2,3.2]],roofP:[[3.2,3],[3.4,3.8],[2.7,5],[1.5,6.2],[.5,7.2],[.02,7.8]],poleY:7.6,
+  orn:y=>[P3(EX(starShape(8,2.2,1.5),.25),'#c2486a',{x:-3,y:y+1.6,z:-2.4}),P3(EX(boltShape(),.35),'#ffd23f',{x:-3,y:y+3.1,z:-2.17,sx:1.9,sy:1.9})],
+  extra(ex){[[6.6,-1.8,2],[3,-6.8,2.6],[-7.2,.5,2.1],[3.5,6.9,1.8]].forEach((q,i)=>ex.push(P3(crystal(.5,q[2]+.8),['#ffb347','#ff7a3d','#ff4f6a','#ffd23f'][i],{x:q[0],y:.3,z:q[1],rz:(i%2?-.25:.25)})));
+   for(let i=0;i<3;i++)ex.push(P3(EX(shp(s=>s.absarc(0,0,.75,0,PI*2)),.28,true),['#c98a4b','#a86a35','#e0a860'][i],{x:-6.2+i*.4,y:.3,z:-6+i*1.5,rx:-H}))},
+  st:{rock:'#5a3a5a',frost:'#ff7a3d',tower:'#6a3a8a',band:'#ffb347',star:'#ffe58a',pad:['#ffb347','#ffe6c0'],gA:'#ffb347',gB:'#c2486a'}},
+ intro:'Гроза близко. Облака тяжёлые, а карамель — сладкая.'
+}];
+
+// ================= построение мира =================
+let th=LV[0],W=null,sky,far,CL,CG=[],decor=[],confetti=[],fx=null,flash=0;
+const ST=new V3(36,0,-30),ORG=new V3(0,0,0);let gA,gB,bc;
+function disposeTree(o){o.traverse(n=>{if(n.geometry&&!KEEP.has(n.geometry))n.geometry.dispose();const m=n.material;if(m&&!KEEP.has(m))(Array.isArray(m)?m:[m]).forEach(x=>x.dispose())})}
+function makeSky(){const g=new THREE.SphereGeometry(500,32,20),a=g.attributes.position,col=new Float32Array(a.count*3),c=new THREE.Color(),cB=new THREE.Color(th.below),cF=new THREE.Color(th.fog),SS=th.sky.map(s=>[s[0],new THREE.Color(s[1])]);
+ for(let i=0;i<a.count;i++){const h=a.getY(i)/500;if(h<=0)c.copy(cF).lerp(cB,Math.min(1,-h*3));else{let k=0;while(k<SS.length-2&&h>SS[k+1][0])k++;c.copy(SS[k][1]).lerp(SS[k+1][1],Math.min(1,(h-SS[k][0])/(SS[k+1][0]-SS[k][0])))}col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
+ g.setAttribute('color',new THREE.BufferAttribute(col,3));return new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:1,fog:false}))}
+// остров с лавкой и станция прокачки в цветах мира
+function buildBase(){const B=th.base,ex=[],K=B.st;
+ function cane(x,z,ry,h){const cv=new THREE.CatmullRomCurve3([new V3(0,0,0),new V3(0,h,0),new V3(.05,h+.7,0),new V3(.5,h+1.15,0),new V3(1.1,h+.9,0),new V3(1.3,h+.35,0)]),pts=cv.getPoints(40);for(let i=0;i<8;i++)ex.push(P3(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.slice(i*5,i*5+6)),4,.22,6),i%2?B.cane[0]:B.cane[1],{x,y:.3,z,ry}))}
+ for(let i=0;i<6;i++){const a=i*1.047+.4;cane(Math.cos(a)*7.6,Math.sin(a)*7.6,a+1.2,1.4+(i%3)*.5)}
+ for(let i=0;i<16;i++){const a=i*.83+.3,d=4.5+(i*7%4)*1.1,x=Math.cos(a)*d,z=Math.sin(a)*d;if(Math.hypot(x+3,z+2)<4.6)continue;const s=.7+(i%3)*.35;ex.push(gum(B.gum[i%5],x,.3,z,s))}
+ for(let i=0;i<5;i++)ex.push(P3(EX(shp(s=>s.absarc(0,0,.65,0,PI*2)),.25,true),B.pad,{x:-3+Math.sin(i*1.3)*.7,y:.3,z:1.9+i*1.35,rx:-PI/2}));
+ ex.push(P3(EX(starShape(10,3.4,2.5),.18,true),B.pst[0],{x:4,y:.3,z:3,rx:-PI/2}),P3(EX(starShape(10,2.2,1.5),.18),B.pst[1],{x:4,y:.55,z:3,rx:-PI/2}));
+ [[0,-5.5],[2,-3]].forEach((q,k)=>{ex.push(P3(LA([[.28,0],[.2,3.5]],6),'#fff',{x:q[0],y:.3,z:q[1]}),P3(LA([[.01,3.2],[.9,3.2],[1.7,4],[1.4,5.4],[.01,6.8]],8),B.lol[k],{x:q[0],y:.3,z:q[1]}))});
+ B.extra(ex);
+ const shop=merge([P3(rgG,B.rock,{y:-.4}),P3(EX(rimShape(0,9.3,.45,8),.7,true),B.frost,{y:-.45,rx:-PI/2}),
+  P3(LA(B.bodyP,16),B.body,{x:-3,y:.3,z:-2}),P3(LA(B.roofP,16),B.roof,{x:-3,y:.3,z:-2}),P3(LA([[.12,0],[.12,3.4]],6),'#fff',{x:-3,y:B.poleY,z:-2})]
+  .concat(B.orn(B.poleY+3.8),[P3(EX(door,.3),B.door,{x:-3,y:.3,z:.75}),P3(EX(starShape(5,.45,.2),.2),B.win,{x:-4.5,y:2.1,z:.55}),P3(EX(starShape(5,.45,.2),.2),B.win,{x:-1.5,y:2.1,z:.55})],ex));
+ W.add(mesh(shop));
+ // станция прокачки: отдельный остров с башней и шестернями
+ const stG=new THREE.Group();stG.position.copy(ST);
+ const sp=[P3(rgG,K.rock,{y:-.3,sx:.62,sy:.62,sz:.62}),P3(EX(rimShape(0,9.3,.45,8),.7,true),K.frost,{y:-.4,rx:-PI/2,sx:.62,sy:.62}),
+  P3(LA([[2.4,0],[2.9,1],[2.3,3],[1.9,5],[2.3,5.4],[2.3,6]],14),K.tower,{y:.3,z:-1.8}),P3(LA([[2.3,2.2],[2.4,2.45],[2.3,2.7]],14),K.band,{y:.3,z:-1.8}),
+  P3(EX(starShape(5,.4,.18),.15),K.star,{y:3.4,z:.4}),P3(LA([[.18,0],[.18,4.9]],6),'#ffffff',{x:4.2,y:.3,z:-1.8}),
+  P3(EX(starShape(10,2.8,2.1),.18,true),K.pad[0],{y:.3,z:3.1,rx:-PI/2}),P3(EX(starShape(10,1.8,1.2),.18),K.pad[1],{y:.55,z:3.1,rx:-PI/2})];
+ [[-4,1],[4,0],[3.5,-3.2],[-3.5,-3],[-2.5,4]].forEach((q,i)=>sp.push(gum(B.gum[i%5],q[0],.3,q[1],1)));
+ gA=new THREE.Group();gB=new THREE.Group();bc=mesh(starG,starM[3]);
+ gA.add(mesh(merge([P3(EX(gearShape(10,2.7,2.1,.7),.5,true),K.gA,{rx:-PI/2})])));gA.position.set(0,6.3,-1.8);
+ gB.add(mesh(merge([P3(EX(gearShape(7,1.7,1.25,.5),.5,true),K.gB,{rx:-PI/2})])));gB.position.set(4.2,5,-1.8);
+ bc.scale.setScalar(1.4);bc.position.set(0,9.2,-1.8);stG.add(mesh(merge(sp)),gA,gB,bc);W.add(stG)}
+function buildWorld(){
+ if(W){sc.remove(W);disposeTree(W);CG.forEach(a=>a.forEach(g=>g.dispose()))}
+ W=new THREE.Group();sc.add(W);th=LV[S.lvl-1];decor=[];confetti=[];
+ // интерфейс, свет, туман, цвета звёзд
+ Object.keys(th.hud).forEach(k=>document.documentElement.style.setProperty('--'+k,th.hud[k]));
+ sc.fog.color.set(th.fog);sc.fog.near=th.fogN;sc.fog.far=LOW?Math.min(th.fogF,240):th.fogF;
+ hemi.color.set(th.hemi[0]);hemi.groundColor.set(th.hemi[1]);hemi.intensity=th.hemi[2];
+ sun.color.set(th.sun[0]);sun.intensity=th.sun[1];sun.position.set(...th.sun[2]);rim.color.set(th.rim[0]);rim.intensity=th.rim[1];rim.position.set(...th.rim[2]);
+ starM.forEach((m,i)=>{m.color.set(th.col[i]);m.emissive.set(th.col[i])});
+ // небо, солнце/луна, далёкие горы
+ sky=makeSky();W.add(sky);far=new THREE.Group();W.add(far);
+ th.discs.forEach(a=>{const m=new THREE.Mesh(new THREE.CircleGeometry(a[0],40),new THREE.MeshBasicMaterial({color:a[1],transparent:true,opacity:a[2],fog:false,depthWrite:false}));m.position.set(th.discX,th.discY,-440);far.add(m)});
+ if(th.far)th.far(far);
+ {const TG=[1,2,3].map(th.tower),fm=new THREE.MeshLambertMaterial({vertexColors:true,flatShading:true,fog:false});for(let i=0;i<26;i++){const m=new THREE.Mesh(TG[i%3],fm),f=(Math.random()*2-1)*1.3,d=380+Math.random()*80,s=th.towerS[0]+Math.random()*th.towerS[1];m.scale.setScalar(s);m.position.set(Math.sin(f)*d,th.towerY,-Math.cos(f)*d);m.rotation.y=Math.random()*6;far.add(m)}}
+ W.add(mesh(seaGeo()));
+ // парящие острова и конфетти
+ {const DJ=[1,2,3].map(th.island);
+  for(let i=0;i<(LOW?26:44);i++){const m=mesh(DJ[i%3]),an=Math.random()*6.283,d=30+Math.random()*(th.R+170),y0=-12-Math.random()*20,s=.45+Math.random()*.9;m.scale.setScalar(s);m.rotation.y=Math.random()*6;m.position.set(Math.cos(an)*d,y0,Math.sin(an)*d);W.add(m);decor.push({m,y0,s:Math.random()*6})}
+  const cf=th.conf();for(let i=0;i<(LOW?70:140);i++){const k=cf[i%cf.length],m=mesh(k.g,k.m),an=Math.random()*6.283,d=15+Math.random()*(th.R+60),y0=-14+Math.random()*10;m.scale.setScalar(th.confS[0]+Math.random()*th.confS[1]);m.position.set(Math.cos(an)*d,y0,Math.sin(an)*d);W.add(m);confetti.push({m,y0,r:.3+Math.random()*.8})}}
+ // погода и небесные эффекты
+ fx=th.fx();fx.objs.forEach(o=>W.add(o));
+ // облака этого мира
+ CG=[0,1,2,3].map(t=>Array.from({length:NP},(_,p)=>p).map(p=>th.cloud(1+t*3+p,t,p)));CL=new THREE.Group();W.add(CL);
+ buildBase();buildIslets();
+}
+
+// ================= v3: коллекционки, островки, дроны =================
+const M4=o=>new THREE.Matrix4().compose(new V3(o.x||0,o.y||0,o.z||0),new THREE.Quaternion().setFromEuler(new THREE.Euler(o.rx||0,o.ry||0,o.rz||0)),new V3(o.sx||1,o.sy||1,o.sz||1));
+const T=(ps,o)=>{const m=M4(o);return ps.map(p=>{const g=p.g.clone();g.applyMatrix4(m);return{g,c:p.c}})};
+const cyl=(a,b,h,c,o,n)=>P3(LA([[a,0],[b,h]],n||10),c,o),TOR=(R,r,c,o)=>P3(new THREE.TorusGeometry(R,r,8,22),c,o);
+const caneParts=(pts,w,c1,c2,z)=>{const pp=new THREE.CatmullRomCurve3(pts).getPoints(30),o=[];for(let i=0;i<6;i++)o.push(P3(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pp.slice(i*5,i*5+6)),4,w-i*.03,7),i%2?c1:c2,{z}));return o};
+const ITEMS=[
+{id:'hat',n:'Леденцовый цилиндр',e:'🎩',slot:'head',w:1,d:'Полосатый, с мятной лентой и звёздочкой',pl:{x:2.1,y:1.45,rz:-.28},
+ b:()=>{const ps=[P3(LA([[.01,0],[1.3,0],[1.38,.12],[.01,.12]],16),'#ff7ac6')];['#ffffff','#ff3d5a','#ffffff','#ff3d5a'].forEach((c,i)=>ps.push(cyl(.82,.82,.3,c,{y:.12+i*.3},16)));
+  ps.push(P3(LA([[.82,1.32],[.01,1.32]],16),'#ff3d5a'),TOR(.84,.09,'#7ff0c8',{y:.2,rx:H}),P3(EX(starShape(5,.4,.18),.12,true),'#ffd84d',{y:.75,z:.8}));return ps}},
+{id:'glass',n:'Звёздные очки',e:'🕶️',slot:'face',w:1,d:'Две звезды вместо стёкол',pl:{x:2.95,y:.5},
+ b:()=>{const ps=[];[1,-1].forEach(s=>{const z=s>0?1.36:-1.5;ps.push(P3(EX(starShape(5,.62,.3),.14),'#ff4f9a',{z,rz:.1}),P3(EX(starShape(5,.44,.2),.05),'#8fe3ff',{z:z+(s>0?.15:-.05),rz:.1}),P3(new THREE.BoxGeometry(2.6,.09,.09),'#ff4f9a',{x:-1.3,y:.15,z:s*1.45}))});return ps}},
+{id:'bow',n:'Зефирный бант',e:'🎀',slot:'neck',w:1,d:'Пышный, как зефирка',pl:{x:1.4,y:-.9,z:1.5},
+ b:()=>{const ps=[];[-1,1].forEach(s=>ps.push(P3(blobGeo(3,s+2,1,.12,3,1),'#fff6fb',{x:s*.8,sx:.8,sy:.62,sz:.4}),P3(EX(shp(q=>{q.moveTo(0,0);q.quadraticCurveTo(s*.4,-.7,s*.9,-1.3);q.lineTo(s*.5,-1.2);q.quadraticCurveTo(s*.3,-.6,0,0)}),.12),'#ff7ac6',{y:-.1,z:-.1})));ps.push(gum('#ff7ac6',0,-.25,-.25,.55));return ps}},
+{id:'donut',n:'Пончик-спасатель',e:'🍩',slot:'body',w:1,d:'Розовая глазурь и посыпка',pl:{x:-.8},
+ b:()=>{const ps=[TOR(1.95,.42,'#e0a860',{ry:H,sx:.9}),TOR(1.95,.43,'#ff8fcf',{ry:H,sx:.9,y:.14}),],cc=['#fff','#7fd0ff','#ffd84d','#b6f5a8'];for(let i=0;i<16;i++){const a=-1.4+i*.19;ps.push(P3(new THREE.BoxGeometry(.3,.07,.07),cc[i%4],{x:(i%3-1)*.3,y:Math.cos(a)*2.36+.2,z:Math.sin(a)*2.1,rx:i,ry:i*1.7}))}return ps}},
+{id:'crown',n:'Ледяная корона',e:'👑',slot:'head',w:2,d:'Семь кристаллов и снежинка',pl:{x:2.1,y:1.55,rz:-.25},
+ b:()=>{const ps=[cyl(.95,1.05,.5,'#d8f6ff',{},14),TOR(1,.09,'#8ff5d8',{y:.05,rx:H}),TOR(1.04,.09,'#8ff5d8',{y:.5,rx:H})];for(let i=0;i<7;i++){const a=i/7*PI*2;ps.push(P3(crystal(.2,i%2?1.1:1.5),['#9fe3ff','#ffffff','#8ff5d8'][i%3],{x:Math.cos(a)*.95,y:.45,z:Math.sin(a)*.95,rz:-Math.cos(a)*.2,rx:Math.sin(a)*.2}))}ps.push(P3(crystal(.28,1.9),'#d48bff',{y:.4}));flakeParts(.5,'#ffffff',{y:.25,z:1.05,d:.1}).forEach(p=>ps.push(p));return ps}},
+{id:'scarf',n:'Шарф авроры',e:'🧣',slot:'neck',w:2,d:'Тёплый, мятный, с кисточками',pl:{x:1.7},
+ b:()=>{const ps=[];['#7ff0d4','#ffffff','#7ff0d4','#d8f6ff'].forEach((c,i)=>ps.push(TOR(1.98,.2,c,{ry:H,sx:.9,x:(i-1.5)*.34})));
+  ps.push(P3(EX(shp(q=>{q.moveTo(0,0);q.lineTo(.7,0);q.lineTo(.75,-2.3);q.lineTo(0,-2.1);q.closePath()}),.18),'#7ff0d4',{x:-.2,y:-.3,z:1.8,rz:.1}),P3(EX(shp(q=>{q.moveTo(.1,-.2);q.lineTo(.6,-.2);q.lineTo(.64,-2.2);q.lineTo(.1,-2)}),.05),'#ffffff',{x:-.2,y:-.3,z:1.98,rz:.1}));
+  for(let i=0;i<5;i++)ps.push(cyl(.06,.05,.4,'#ffffff',{x:-.15+i*.16,y:-2.75,z:1.88}));return ps}},
+{id:'wings',n:'Грозовые крылья',e:'⚡',slot:'back',w:3,d:'Рваные молнии вместо перьев',pl:{x:.2,y:1.7},
+ b:()=>{const ps=[],wg=shp(q=>{[[0,0],[-1.3,.5],[-.9,1],[-2.3,1.9],[-1.5,2],[-2.2,3.4],[-.3,2.5],[.5,1.4]].forEach((p,i)=>i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]));q.closePath()});
+  [1,-1].forEach(s=>ps.push(P3(EX(wg,.14),'#ffd23f',{rx:s*1.05,x:.3,z:s*.4}),P3(EX(wg,.1),'#fff6c0',{rx:s*1.05,x:.4,y:.15,z:s*.45,sx:.6,sy:.6})));return ps}},
+{id:'horns',n:'Карамельные рожки',e:'🍬',slot:'head',w:3,d:'Полосатые, как трость',pl:{x:2,y:1.4},
+ b:()=>{const ps=[];[1,-1].forEach(s=>{caneParts([[0,0,0],[.1,.7,s*.2],[.35,1.3,s*.55],[.8,1.7,s*.9],[1.4,1.8,s*1.1]].map(a=>new V3(a[0],a[1],a[2])),.26,'#ffe9c8','#ff7a3d',s*.5).forEach(p=>ps.push(p));ps.push(gum('#ffd23f',1.4,1.8,s*1.6,.4))});return ps}},
+{id:'pompom',n:'Снежные помпоны',e:'❄️',slot:'tail',w:2,d:'Пушистые, с ледяными искрами',pl:{x:-5.6,y:.1},
+ b:()=>{const ps=[];[1.9,-1.9].forEach(z=>{[0,1,2].forEach(i=>ps.push(P3(blobGeo(5+i,i,1,.18,4,1),['#ffffff','#e6f9ff','#bfefff'][i],{x:i*.18-.1,y:i*.12,z:z+(i-1)*.12,sx:.5+i*.05,sy:.5,sz:.5})));ps.push(P3(crystal(.12,.6),'#8ff5d8',{x:.2,y:.5,z,rz:.4}))});return ps}},
+{id:'halo',n:'Звёздный нимб',e:'😇',slot:'halo',w:2,d:'Парит над кабиной и тихо звенит',pl:{x:2.1,y:3.7},
+ b:()=>{const ps=[TOR(.95,.07,'#ffe36e',{rx:H}),TOR(.7,.04,'#8ff5d8',{rx:H})];for(let i=0;i<8;i++){const a=i/8*PI*2;ps.push(P3(EX(starShape(5,.2,.09),.06),i%2?'#ffffff':'#ffd84d',{x:Math.cos(a)*.95,z:Math.sin(a)*.95,y:.1,rx:H}))}return ps}},
+{id:'plume',n:'Угольный плюмаж',e:'🔥',slot:'tail',w:3,d:'Три языка пламени на хвосте',pl:{x:-4.4,y:.9},
+ b:()=>{const ps=[],fl=k=>shp(q=>{[[0,0],[.5,.2],[.55,.8],[.3,1.5],[.2,1],[0,1.9],[-.2,1],[-.3,1.5],[-.55,.8],[-.5,.2]].forEach((c,i)=>i?q.lineTo(c[0]*k,c[1]*k):q.moveTo(c[0]*k,c[1]*k));q.closePath()});
+  [[-.5,.45],[0,0],[.5,-.45]].forEach((a,i)=>{ps.push(P3(EX(fl(1),.14),'#ff4f6a',{rz:a[1],z:a[0]*.15,x:-i*.1}),P3(EX(fl(.68),.1),'#ff9a3d',{rz:a[1],z:a[0]*.15+.07,x:-i*.1}),P3(EX(fl(.4),.08),'#ffe58a',{rz:a[1],z:a[0]*.15+.1,x:-i*.1}))});return ps}},
+{id:'spikes',n:'Лавовые шипы',e:'🌋',slot:'spine',w:3,d:'Горячие кристаллы вдоль хвоста',pl:{},
+ b:()=>{const ps=[],xs=[-3.3,-2.8,-2.3,-1.8,-1.3,-.9],ys=[.55,.8,1,1.2,1.45,1.6],hs=[.9,1.1,1.3,1.5,1.4,1.2];xs.forEach((x,i)=>ps.push(P3(crystal(.22,hs[i]),['#ff7a3d','#ffb347','#ff4f6a'][i%3],{x,y:ys[i],rz:.35})));return ps}}];
+const eqM=new THREE.Mesh(new THREE.BufferGeometry(),MAT);ship.add(eqM);
+let stEq=null,drones=[],isl=[],items=[],DG={},sk0=1;
+function updateEq(){const ps=[];Object.keys(S.eq).forEach(k=>{const it=ITEMS.find(a=>a.id==S.eq[k]);if(it&&S.got.includes(it.id))T(it.b(),it.pl).forEach(p=>ps.push(p))});
+ const g=ps.length?merge(ps):new THREE.BufferGeometry();eqM.geometry.dispose();eqM.geometry=g;if(stEq){stEq.geometry.dispose();stEq.geometry=ps.length?g.clone():new THREE.BufferGeometry()}}
+function ban(a,b,c){$('bn1').textContent=a;$('bn2').textContent=b;$('bn3').textContent=c;const e=$('banner');e.classList.remove('show');void e.offsetWidth;e.classList.add('show')}
+
+// ---- островки: сначала руины, потом восстановление звёздочками
+const DP=new V3(-58,0,34),KP=new V3(60,0,44),DN=()=>40+(S.lvl-1)*20,KN=()=>30,rest=o=>S[o.k]>=o.need();
+function ruins(){const g='#7c7494',g2='#9a92b4',ps=[];
+ for(let i=0;i<7;i++){const a=i*.9+1,d=1.8+(i%3)*1.4,k=1.1+(i%3)*.35;ps.push(P3(blobGeo(i*2.1,i,1,.3,3,.55),i%2?g:g2,{x:Math.cos(a)*d,y:-.2+Math.sin(i*1.7)*.6,z:Math.sin(a)*d,sx:k,sy:.8,sz:k}))}
+ ps.push(P3(LA([[1.5,0],[1.3,1.6],[.9,2.4],[1.1,2.9]],7),g2,{x:-1,z:-.5,rz:.15}),P3(LA([[.12,0],[.1,2.6]],5),'#5a5470',{x:1.6,z:1,rz:.5}));
+ for(let i=0;i<4;i++)ps.push(P3(EX(starShape(5,.55,.25),.12),'#b9b2d0',{x:Math.cos(i*1.6)*2.5,y:2.2+i*.25,z:Math.sin(i*1.6)*2.5,rz:i}));return ps}
+const isle=(K,sc)=>[P3(rgG,K.rock,{y:-.3,sx:.55,sy:.55,sz:.55}),P3(EX(rimShape(1,9.3,.45,8),.7,true),K.frost,{y:-.4,rx:-H,sx:.55,sy:.55})];
+const ringP=(c,x,z,y)=>[P3(EX(shp(s=>{s.absarc(0,0,.95,0,PI*2);const h=new THREE.Path();h.absarc(0,0,.75,0,PI*2,true);s.holes.push(h)}),.1),c,{x,z,y:y||.3,rx:-H}),P3(EX(starShape(5,.5,.22),.08),c,{x,z,y:(y||.3)+.02,rx:-H})];
+function fineD(K,B){const ps=isle(K).concat([P3(LA([[2.3,0],[2.4,1],[2.1,2.2],[1.3,3],[.01,3.4]],16),B.body,{x:-1.2,y:.2,z:-.8}),P3(LA([[2.35,.9],[2.4,1.2],[2.3,1.5]],16),K.band,{x:-1.2,y:.2,z:-.8}),P3(EX(door,.3),B.door,{x:-1.2,y:.2,z:1.4,sx:.9}),
+  P3(LA([[.14,0],[.12,3.8]],6),'#fff',{x:-1.2,y:3.4,z:-.8}),P3(LA([[.01,0],[.9,.25],[1.3,.8]],12),K.gA,{x:-1.2,y:7.1,z:-.8,rx:-.6}),P3(EX(starShape(5,.4,.18),.15),'#ffd23f',{x:-1.2,y:7.7,z:-.8})]);
+ [[2.4,1.4],[1.2,3.1],[3.2,-1.6]].forEach((q,i)=>ringP(B.pst[i%2],q[0],q[1]).forEach(p=>ps.push(p)));[[3.4,2.6],[-3.6,2.4],[-3.6,-3]].forEach((q,i)=>ps.push(gum(B.gum[i],q[0],.3,q[1],.9)));return ps}
+function fineK(K,B){const ps=isle(K).concat([P3(LA([[2.6,0],[2.6,.35],[2.1,.45],[2.1,.8],[1.6,.9],[1.6,1.3],[1.9,1.4],[1.9,1.55]],14),B.body,{y:.2}),P3(LA([[2.62,.1],[2.62,.3]],14),K.band,{y:.2}),TOR(2.1,.09,K.gA,{y:1,rx:H})]);
+ for(let i=0;i<4;i++){const a=i*H+.785,x=Math.cos(a)*3.6,z=Math.sin(a)*3.6;ps.push(P3(LA([[.32,0],[.22,.5],[.2,2.6],[.3,2.8]],8),B.body,{x,y:.2,z}),P3(EX(starShape(5,.45,.2),.15),K.star,{x,y:3.4,z}),gum(B.gum[i],x*.7,.3,z*.7,.6))}return ps}
+function buildIslets(){const K=th.base.st,B=th.base;DG={};drones=[];isl=[];stEq=null;
+ const mk=(pos,fi,k,need,em)=>{const g=new THREE.Group();g.position.copy(pos);const ru=mesh(merge(ruins()));g.add(ru,fi);W.add(g);isl.push({g,ru,fi,pos,k,need,em})};
+ const d=new THREE.Group();d.add(mesh(merge(fineD(K,B))));mk(DP,d,'dp',DN,'🤖');
+ const k=new THREE.Group();k.add(mesh(merge(fineK(K,B))));const st=new THREE.Group();st.add(mesh(buildWhale()));stEq=new THREE.Mesh(new THREE.BufferGeometry(),MAT);st.add(stEq);st.scale.setScalar(.3);st.position.y=1.95;st.rotation.y=-.5;k.add(st);
+ const dm=new THREE.Mesh(new THREE.SphereGeometry(3.2,20,10,0,PI*2,0,H),new THREE.MeshBasicMaterial({color:'#dff4ff',transparent:true,opacity:.13,side:2,depthWrite:false}));dm.position.y=.6;k.add(dm);mk(KP,k,'kp',KN,'🎩');
+ for(let i=0;i<S.dr;i++)addDrone();updateEq()}
+
+// ---- дроны-автоматы
+const RG=merge([P3(EX(shp(q=>{q.moveTo(0,0);q.quadraticCurveTo(.4,.16,.85,0);q.quadraticCurveTo(.4,-.16,0,0)}),.04),'#ffffff',{rx:H}),P3(EX(shp(q=>{q.moveTo(0,0);q.quadraticCurveTo(.4,.16,.85,0);q.quadraticCurveTo(.4,-.16,0,0)}),.04),'#ffd84d',{rx:H,ry:PI})]);KEEP.add(RG);
+function droneGeo(i){if(DG[i])return DG[i];const c=th.base.gum[i%5],eye=shp(q=>q.absarc(0,0,.1,0,PI*2)),ps=[P3(LA([[.01,-.34],[.5,-.3],[.78,0],[.6,.26],[.01,.32]],14),c),TOR(.72,.07,'#ffffff',{rx:H}),P3(LA([[.42,.25],[.38,.5],[.2,.7],[.01,.76]],10),'#bfefff'),
+  P3(LA([[.4,-.28],[.32,-.62],[.01,-.7]],10),'#fff0c8'),P3(EX(eye,.08),'#22143a',{x:.32,y:.42,z:.15,ry:H}),P3(EX(eye,.08),'#22143a',{x:.32,y:.42,z:-.15,ry:H}),P3(EX(starShape(5,.2,.09),.06),'#ffd84d',{y:.05,z:.6}),P3(EX(starShape(5,.2,.09),.06),'#ffd84d',{y:.05,z:-.66})];
+ for(let k=0;k<4;k++){const a=k*H+.785,ca=Math.cos(a),sa=Math.sin(a);ps.push(P3(new THREE.TubeGeometry(new THREE.LineCurve3(new V3(ca*.5,0,sa*.5),new V3(ca*1.15,.28,sa*1.15)),1,.06,5),'#fff'),gum(c,ca*1.15,.26,sa*1.15,.2))}
+ return DG[i]=merge(ps)}
+function addDrone(){const n=drones.length,g=new THREE.Group(),rt=[];g.add(mesh(droneGeo(n)));for(let k=0;k<4;k++){const a=k*H+.785,r=mesh(RG);r.position.set(Math.cos(a)*1.15,.48,Math.sin(a)*1.15);g.add(r);rt.push(r)}
+ const star=mesh(starG,starM[1]);star.scale.setScalar(.35);star.position.y=-1;star.visible=false;g.add(star);const home=new V3(DP.x+Math.cos(n*.63)*3.5,3.4+(n%2)*.8,DP.z+Math.sin(n*.63)*3.5);g.position.copy(home);g.scale.setScalar(1.1);W.add(g);drones.push({g,rt,star,home,st:0,tm:Math.random(),tgt:null,load:0,tot:1})}
+const mv=(p,x,y,z,s,dt)=>{const dx=x-p.x,dy=y-p.y,dz=z-p.z,l=Math.hypot(dx,dy,dz),k=Math.min(1,s*dt/(l||1));p.x+=dx*k;p.y+=dy*k;p.z+=dz*k;return l};
+function droneStep(dt){const pw=powV(),ds=Math.max(22,spdV()*1.5);drones.forEach((d,i)=>{const p=d.g.position,ox=p.x,oz=p.z;d.rt.forEach(r=>r.rotation.y=t*35);
+ if(d.st==0){mv(p,d.home.x,d.home.y+Math.sin(t*2+i)*.2,d.home.z,16,dt);d.tm-=dt;if(d.tm<=0){d.tm=.6;let b=null,bd=1e9;for(const c of clouds){if(c.fly||c.dr||c.need>pw+.001)continue;const q=(c.g.position.x-p.x)**2+(c.g.position.z-p.z)**2;if(q<bd){bd=q;b=c}}if(b){b.dr=1;d.tgt=b;d.st=1}}}
+ else if(d.st<3){const c=d.tgt;if(!c||c.fly||!clouds.includes(c)){if(c)c.dr=0;d.tgt=null;d.st=0;d.tm=.3}
+  else if(d.st==1){if(mv(p,c.g.position.x,4.3,c.g.position.z,ds,dt)<.9){d.st=2;c.dr=2;d.tot=d.tm=1+c.need*.5}}
+  else{p.y+=(4.3+Math.sin(t*6)*.1-p.y)*.2;d.tm-=dt;c.p=Math.min(1,1-d.tm/d.tot);if(d.tm<=0){CL.remove(c.g);clouds.splice(clouds.indexOf(c),1);d.load=c.val;d.star.visible=true;d.tgt=null;d.st=3;ui()}}}
+ else if(mv(p,-3,4.5,-2,ds,dt)<3){const v=Math.round(d.load*valV());S.cash+=v;fl('🤖 +'+v,new V3(-3,11,-2));S.st.m+=v;S.st.d++;sfx('coin');d.star.visible=false;d.load=0;d.st=0;d.tm=.3;save();ui()}
+ const vx=p.x-ox,vz=p.z-oz;if(vx*vx+vz*vz>1e-5){let a=Math.atan2(-vz,vx)-d.g.rotation.y;a=Math.atan2(Math.sin(a),Math.cos(a));d.g.rotation.y+=a*.15}})}
+
+// ---- секретные коллекционки: случайные места, видны только вблизи
+function spawnItems(){items=[];ITEMS.forEach(it=>{if(it.w!=S.lvl||S.got.includes(it.id))return;let x,z;do{const a=Math.random()*PI*2,d=30+Math.random()*(th.R-12);x=Math.cos(a)*d;z=Math.sin(a)*d}while(Math.hypot(x-ST.x,z-ST.z)<20||Math.hypot(x-DP.x,z-DP.z)<14||Math.hypot(x-KP.x,z-KP.z)<14);
+ const g=new THREE.Group(),gm=merge(it.b());gm.computeBoundingBox();const bb=gm.boundingBox,cn=new V3(),sz=new V3();bb.getCenter(cn);bb.getSize(sz);gm.translate(-cn.x,-cn.y,-cn.z);const m=mesh(gm);m.scale.setScalar(Math.min(1.1,3.2/Math.max(sz.x,sz.y,sz.z,1)));g.add(m);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex,color:th.col[3],transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));sp.scale.setScalar(7);g.add(sp);
+ g.position.set(x,3,z);g.visible=false;CL.add(g);items.push({g,m,it,pos:g.position,s:Math.random()*6})})}
+function v3step(dt){if(!mm){S.st.t+=dt;if((svT+=dt)>15){svT=0;save()}}
+ isl.forEach(o=>{const r=rest(o);o.ru.visible=!r;o.fi.visible=r;if(!r&&cargo.length&&Math.hypot(P.x-o.pos.x,P.z-o.pos.z)<9){o.tm=(o.tm||0)-dt;if(o.tm<=0){o.tm=.09;cargo.pop();S[o.k]++;sfx('blip',S[o.k]);fl('⭐ '+S[o.k]+'/'+o.need(),new V3(o.pos.x,9,o.pos.z));save();ui();if(rest(o))sfx('restore'),ban('🔧 Остров восстановлен!',o.k=='dp'?'Станция дронов':'Остров коллекции',o.k=='dp'?'Покупай дронов: сами собирают облака':'Тут можно надеть найденные секреты')}}});
+ droneStep(dt);
+ for(let i=items.length-1;i>=0;i--){const o=items[i],d=Math.hypot(P.x-o.pos.x,P.z-o.pos.z);o.g.visible=d<24;if(d<34&&(o.tw=(o.tw||0)-dt)<=0){o.tw=1.6+Math.random();sfx('twinkle',1-d/34)}o.m.rotation.y=t*1.2+o.s;o.pos.y=3+Math.sin(t*1.5+o.s)*.5;
+  if(d<4.5){S.got.push(o.it.id);CL.remove(o.g);items.splice(i,1);save();fl('✨ '+o.it.n,new V3(P.x,8,P.z));sfx('secret'),ban('✨ Секрет найден!',o.it.e+' '+o.it.n,o.it.d+(rest(isl[1])?' · надень на острове коллекции':' · восстанови остров коллекции, чтобы надеть'));ui()}}}
+function v3view(){isl.forEach(o=>{o.g.position.y=Math.sin(t*.8+o.pos.x)*.25;marker(o.k=='dp'?'mk2':'mk3',o.pos,o.em,rest(o)?null:'🔧 '+S[o.k]+'/'+o.need(),150)});
+}
+
+// ---- панели: станция дронов и коллекция
+['mk2','mk3'].forEach(id=>{const e=document.createElement('div');e.id=id;e.className='f mk';document.body.appendChild(e)});
+const mkP=(id,h)=>{const e=document.createElement('div');e.id=id;e.className='pnl';e.innerHTML=h;document.body.appendChild(e);return e};
+const dsh=mkP('dsh','<h3>🤖 Станция дронов <small id="dcash"></small></h3><div class="row" style="--c1:#9ff3dc;--c2:#3a9bff"><div class="ic">🤖</div><div class="tx"><b></b><span>Дрон сам срывает облака (по твоей Мощности) и возит звёзды в лавку</span><div class="lv"></div><i></i></div><button class="buy"></button></div>'),wd=mkP('wd','');
+const dcost=()=>Math.floor(120*Math.pow(1.5,S.dr)*th.valM);
+dsh.querySelector('.buy').onclick=()=>{const c=dcost();if(S.dr<10&&S.cash>=c){S.cash-=c;S.dr++;addDrone();sfx('drone');save();ui()}else sfx('no')};
+function ui2(){const c=dcost(),mx=S.dr>=10,b=dsh.querySelector('.buy');dsh.querySelector('b').textContent='Дрон №'+Math.min(10,S.dr+1)+' · работает: '+S.dr;dsh.querySelector('.lv').innerHTML=Array.from({length:10},(_,i)=>'<s'+(i<S.dr?' class="on"':'')+'></s>').join('');
+ dsh.querySelector('i').textContent=mx?'Флот укомплектован':'Каждый следующий дороже в 1.5 раза';b.textContent=mx?'МАКС':'🍬 '+c;b.disabled=mx||S.cash<c;$('dcash').textContent='🍬 '+Math.floor(S.cash);if(wd.style.display=='flex')buildWd()}
+function buildWd(){wd.innerHTML='<h3>🎩 Коллекция <small>✨ '+S.got.length+'/'+ITEMS.length+'</small></h3>'+ITEMS.map(it=>{const has=S.got.includes(it.id),on=S.eq[it.slot]==it.id;return '<div class="row" style="--c1:#ffe36e;--c2:#ff9ed8"><div class="ic">'+(has?it.e:'❓')+'</div><div class="tx"><b>'+(has?it.n:'Секрет · мир '+it.w)+'</b><span>'+(has?it.d:'Спрятан где-то в этом мире')+'</span></div><button class="buy" data-id="'+it.id+'"'+(has?'':' disabled')+'>'+(has?(on?'Снять':'Надеть'):'🔒')+'</button></div>'}).join('')}
+wd.onclick=e=>{const b=e.target.closest('button');if(!b||!b.dataset.id)return;const it=ITEMS.find(a=>a.id==b.dataset.id);if(S.eq[it.slot]==it.id)delete S.eq[it.slot];else S.eq[it.slot]=it.id;save();updateEq();sfx('equip');buildWd()};
+
+// ================= v4: инстансы облаков, аудио, меню/пауза =================
+let IM={};const _k={};
+function buildIM(){IM={};const cnt={};clouds.forEach(c=>{const k=c.tier*NP+c.pat;cnt[k]=(cnt[k]||0)+1});
+ Object.keys(cnt).forEach(k=>{const im=new THREE.InstancedMesh(CG[(k/NP)|0][k%NP],MAT,cnt[k]+60);im.frustumCulled=false;im.count=0;im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);CL.add(im);IM[k]=im})}
+// рисуем только облака в зоне видимости: расстояние + грубая отсечка по камере (на телефоне это главный выигрыш)
+function drawClouds(){const r2=RD*RD;for(const k in IM)_k[k]=0;
+ for(let i=0;i<clouds.length;i++){const c=clouds[i],p=c.g.position,dx=p.x-P.x,dz=p.z-P.z;if(dx*dx+dz*dz>r2)continue;
+  if(!mm){const f=29-dz;if(f<-4||Math.abs(dx)>f*1.25+28)continue}
+  const k=c.tier*NP+c.pat,im=IM[k];if(!im)continue;const n=_k[k];if(n>=im.instanceMatrix.count)continue;c.g.updateMatrix();im.setMatrixAt(n,c.g.matrix);_k[k]=n+1}
+ for(const k in IM){const im=IM[k];im.count=_k[k];im.instanceMatrix.needsUpdate=true}}
+function applyQ(){LOW=CFG.q==1||(CFG.q!=2&&MOBILE);RD=LOW?215:330;rd.setPixelRatio(LOW?Math.min(1.5,devicePixelRatio):Math.min(2,devicePixelRatio));rs();if(th)sc.fog.far=LOW?Math.min(th.fogF,240):th.fogF}
+
+// ---- веревка к мешку: крепится к колечку под брюхом кита
+const ropeM=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,1,5),new THREE.MeshBasicMaterial({color:'#fff0c8'}));sc.add(ropeM);
+const _a=new V3(),_b=new V3(),_u=new V3(0,1,0);
+function rig(y){const ax=P.x-Math.cos(heading)*1.35,ay=y-.96,az=P.z+Math.sin(heading)*1.35,L=.6+sk0*.45;
+ stack.position.set(ax-V.x*.06,ay-L-1.22*sk0,az-V.z*.06);
+ _a.set(ax,ay,az);_b.set(stack.position.x,stack.position.y+1.22*sk0,stack.position.z);
+ const l=_a.distanceTo(_b);ropeM.position.addVectors(_a,_b).multiplyScalar(.5);ropeM.scale.set(1,l,1);ropeM.quaternion.setFromUnitVectors(_u,_b.sub(_a).normalize())}
+
+// ================= АУДИО =================
+const NN={C:0,D:2,E:4,F:5,G:7,A:9,B:11},nm=s=>{const m=/^([A-G])([#b]?)(\d)$/.exec(s);return(+m[3]+1)*12+NN[m[1]]+(m[2]=='#'?1:m[2]=='b'?-1:0)},mtf=m=>440*Math.pow(2,(m-69)/12),CHN=s=>s.split(' ').map(nm);
+const AU={c:null,want:null,cur:null,trk:null,bar:0,step:0,next:0,lv:1,mb:[],sb:[],am:[],chain:0,lastS:0,fT:0,lastC:0,B:{}};
+const saveCfg=()=>{try{localStorage.setItem('cc3cfg',JSON.stringify(CFG))}catch(e){}};
+function mkBus(rv,dl,k){const c=AU.c,g=c.createGain();g.connect(AU.master);if(rv){const s=c.createGain();s.gain.value=rv;g.connect(s);s.connect(AU.rvIn)}if(dl){const s=c.createGain();s.gain.value=dl;g.connect(s);s.connect(AU.dlIn)}(k=='m'?AU.mb:AU.sb).push(g);return g}
+function applyVol(){if(!AU.c)return;const t=AU.c.currentTime,m=CFG.on&&CFG.mus?CFG.mv:0,s=CFG.on&&CFG.sfx?CFG.sv:0;AU.mb.forEach(b=>b.gain.setTargetAtTime(m*AU.lv,t,.12));AU.sb.forEach(b=>b.gain.setTargetAtTime(s,t,.05))}
+function auInit(){if(AU.c)return;const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=AU.c=new C();
+ AU.comp=c.createDynamicsCompressor();AU.comp.threshold.value=-16;AU.comp.ratio.value=4;AU.pf=c.createBiquadFilter();AU.pf.type='lowpass';AU.pf.frequency.value=20000;
+ AU.master=c.createGain();AU.master.gain.value=.9;AU.master.connect(AU.pf);AU.pf.connect(AU.comp);AU.comp.connect(c.destination);
+ const len=(c.sampleRate*1.7)|0,ir=c.createBuffer(2,len,c.sampleRate);for(let h=0;h<2;h++){const d=ir.getChannelData(h);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.7)}
+ AU.rv=c.createConvolver();AU.rv.buffer=ir;AU.rvIn=c.createGain();const ro=c.createGain();ro.gain.value=.5;AU.rvIn.connect(AU.rv);AU.rv.connect(ro);ro.connect(AU.master);
+ AU.dlIn=c.createGain();const dl=c.createDelay(1),fb=c.createGain(),dlp=c.createBiquadFilter(),dout=c.createGain();dl.delayTime.value=.34;fb.gain.value=.36;dlp.type='lowpass';dlp.frequency.value=2400;dout.gain.value=.5;AU.dlIn.connect(dl);dl.connect(dlp);dlp.connect(fb);fb.connect(dl);dlp.connect(dout);dout.connect(AU.master);
+ AU.nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate);{const d=AU.nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+ const B=AU.B;B.bell=mkBus(.5,.28,'m');B.glass=mkBus(.9,.5,'m');B.pad=mkBus(.45,0,'m');B.bass=mkBus(0,0,'m');B.lead=mkBus(.35,.3,'m');B.dr=mkBus(.1,0,'m');B.pl=mkBus(.3,.15,'m');B.amb=mkBus(.2,0,'m');B.sx=mkBus(.35,.12,'s');B.sxd=mkBus(0,0,'s');
+ // непрерывные звуки: гул мотора и засос
+ const hum=c.createOscillator(),hl=c.createBiquadFilter();AU.hg=c.createGain();hum.type='sawtooth';hum.frequency.value=58;hl.type='lowpass';hl.frequency.value=380;AU.hg.gain.value=0;hum.connect(hl);hl.connect(AU.hg);AU.hg.connect(B.sxd);hum.start();AU.hum=hum;
+ const ss=c.createBufferSource();AU.sf=c.createBiquadFilter();AU.sg=c.createGain();ss.buffer=AU.nb;ss.loop=true;AU.sf.type='bandpass';AU.sf.frequency.value=700;AU.sf.Q.value=1.1;AU.sg.gain.value=0;ss.connect(AU.sf);AU.sf.connect(AU.sg);AU.sg.connect(B.sxd);ss.start();
+ AU.timer=setInterval(tick,30);applyVol();if(AU.want)auSwitch()}
+function tone(t,f,d,v,type,bus,o){o=o||{};const c=AU.c,os=c.createOscillator(),g=c.createGain(),r=o.r||.06,a=o.a||.004;let out=os;os.type=type;os.frequency.setValueAtTime(f,t);if(o.fe)os.frequency.exponentialRampToValueAtTime(o.fe,t+(o.fd||d));if(o.det)os.detune.value=o.det;
+ if(o.cut){const fl=c.createBiquadFilter();fl.type='lowpass';fl.Q.value=o.q||.7;fl.frequency.setValueAtTime(o.cut*(o.sw||1),t);if(o.sw)fl.frequency.exponentialRampToValueAtTime(o.cut,t+Math.min(d,.25));os.connect(fl);out=fl}
+ if(o.vib){const l=c.createOscillator(),lg=c.createGain();l.frequency.value=5.2;lg.gain.value=o.vib;l.connect(lg);lg.connect(os.detune);l.start(t);l.stop(t+d+r+.05)}
+ g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+a);
+ if(o.sus){g.gain.setValueAtTime(v,t+Math.max(a,d));g.gain.exponentialRampToValueAtTime(.0001,t+d+r)}else g.gain.exponentialRampToValueAtTime(.0001,t+d);
+ out.connect(g);g.connect(bus);os.start(t);os.stop(t+d+r+.05)}
+function nz(t,d,type,f,q,v,bus,fe){const c=AU.c,s=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();s.buffer=AU.nb;fl.type=type;fl.frequency.setValueAtTime(f,t);if(fe)fl.frequency.exponentialRampToValueAtTime(fe,t+d);fl.Q.value=q;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(fl);fl.connect(g);g.connect(bus);s.start(t,Math.random()*1.5);s.stop(t+d+.05)}
+function bell(t,f,d,v,bus,g){tone(t,f,d,v,'sine',bus);tone(t,f*(g?2.76:2),d*.4,v*(g?.28:.32),'sine',bus);if(g)tone(t,f*5.4,d*.15,v*.1,'sine',bus)}
+
+// ---- музыка: у каждого мира своя тема. Мелодия записана по тактам (16 шагов): «нота/длина», r — пауза
+const TR={
+ menu:{bpm:84,sw:.08,lv:.9,ch:['C3 G3 C4 E4','A2 E3 A3 C4','F2 C3 F3 A3','G2 D3 G3 B3','C3 G3 C4 E4','A2 E3 A3 C4','D3 A3 D4 F4','G2 D3 G3 B3'],rt:['C3','A2','F2','G2','C3','A2','D3','G2'],
+  mel:['E5/4 G5/4 C6/4 B5/2 A5/2','A5/4 C6/4 E6/4 D6/2 C6/2','A5/4 C6/4 F6/4 E6/2 D6/2','D6/4 B5/4 G5/6 r/2','E5/4 G5/4 C6/4 E6/4','D6/4 C6/4 A5/8','F5/4 A5/4 D6/4 C6/2 A5/2','B5/4 D6/4 C6/8'],mi:'bell',mv:.15,
+  pad:{v:.032,t:'triangle',a:.9,cut:1500},arp:{p:[0,null,1,null,2,null,3,null,2,null,1,null,2,null,3,null],o:1,i:'bell',v:.05},bass:[[0,0,4],[8,7,4]],bt:'triangle',bv:.14,bc:900},
+ // 1. Сахарный закат: игривая музыкальная шкатулка, маримба и мягкий бит
+ w1:{bpm:104,sw:.12,lv:.95,ch:['F3 A3 C4 E4','G3 B3 D4 E4','E3 G3 B3 D4','A3 C4 E4 G4','F3 A3 C4 E4','G3 B3 D4 E4','C4 E4 G4 B4','C4 E4 G4 D5'],rt:['F2','G2','E2','A2','F2','G2','C3','C3'],
+  mel:['A5/2 C6/2 A5/2 F5/2 A5/4 G5/2 F5/2','G5/2 B5/2 D6/4 B5/2 G5/2 D5/4','E5/2 G5/2 B5/4 G5/2 E5/2 B4/4','C6/2 B5/2 A5/4 E5/4 A5/2 C6/2','A5/2 C6/2 F6/4 E6/2 C6/2 A5/4','B5/2 D6/2 G6/4 F6/2 D6/2 B5/4','E6/4 D6/2 C6/2 G5/4 E5/2 G5/2','C6/6 G5/2 E5/4 r/4'],mi:'bell',mv:.17,
+  pad:{v:.03,t:'triangle',a:.5,cut:1700},arp:{p:[0,null,2,null,1,null,3,null,2,null,1,null,3,null,2,null],o:1,i:'triangle',v:.06},bass:[[0,0,3],[6,7,2],[8,0,3],[12,7,2]],bt:'triangle',bv:.22,bc:1100,
+  dr:{k:'x.......x..x....',h:'x.x.x.x.x.x.x.x.',r:'....x.......x...'},kv:.55},
+ // 2. Мятная аврора: холодные стеклянные колокола, медленные пады, ветер и редкие искры
+ w2:{bpm:70,sw:0,lv:1,ch:['E3 G3 B3 D4 F#4','C3 G3 B3 E4','G3 B3 D4 F#4','D3 A3 B3 F#4','E3 G3 B3 D4 F#4','C3 G3 B3 E4','A3 C4 E4 G4 B4','D3 A3 E4 F#4'],rt:['E3','C3','G3','D3','E3','C3','A3','D3'],
+  mel:['B5/6 r/2 G5/4 E5/4','G5/4 B5/4 D6/8','D6/6 B5/2 A5/4 G5/4','A5/8 F#5/4 D5/4','E6/4 D6/4 B5/8','C6/6 B5/2 G5/8','A5/4 B5/4 C6/4 B5/4','E5/12 r/4'],mi:'glass',mv:.15,
+  pad:{v:.04,t:'sawtooth',a:1.6,cut:1100,sh:1},arp:{p:[0,null,1,null,2,null,3,null,4,null,3,null,2,null,1,null],o:1,i:'glass',v:.06},bass:[[0,0,16]],bt:'sine',bv:.2,bc:500,bo:12,amb:'wind',sp:.07},
+ // 3. Грозовая карамель: Dm, пульсирующий бас, барабаны, пила-соло и гроза
+ w3:{bpm:124,sw:0,lv:.95,fill:1,ch:['D3 F3 A3 D4','Bb2 D3 F3 Bb3','G2 Bb2 D3 G3','A2 C#3 E3 A3','D3 F3 A3 D4','Bb2 D3 F3 Bb3','C3 E3 G3 C4','A2 C#3 E3 A3'],rt:['D2','Bb2','G2','A2','D2','Bb2','C3','A2'],
+  mel:['D5/3 D5/1 F5/2 A5/2 D6/4 C6/2 A5/2','Bb5/3 A5/1 F5/2 D5/2 F5/4 A5/4','G5/3 G5/1 Bb5/2 D6/2 G6/4 F6/2 D6/2','E6/4 C#6/4 A5/4 r/2 E5/2','A5/2 D6/2 F6/4 E6/2 D6/2 C6/4','D6/4 Bb5/2 D6/2 F6/8','E6/3 D6/1 C6/2 G5/2 E5/4 G5/4','A5/2 C#6/2 E6/2 A6/6 r/4'],mi:'lead',mv:.1,
+  pad:{v:.03,t:'sawtooth',a:.25,cut:650},arp:{p:[0,1,2,3,2,1,0,1,2,3,2,1,0,1,2,1],o:1,i:'sawtooth',v:.035},bass:[[0,0],[2,0],[4,12],[6,0],[8,0],[10,0],[12,12],[14,7]],bt:'sawtooth',bv:.2,bc:560,bsw:3,
+  dr:{k:'x...x...x...x...',s:'....x.......x...',h:'x.x.x.x.x.x.x.x.',o:'..............x.'},kv:1,amb:'rain'}};
+function prep(t){if(t.M)return t;t.M=t.mel.map(b=>{const o={};let s=0;b.split(' ').forEach(k=>{const q=k.split('/'),d=+q[1];if(q[0]!='r')o[s]=[nm(q[0]),d];s+=d});return o});t.CHs=t.ch.map(CHN);t.RT=t.rt.map(nm);return t}
+function playStep(T_,bar,st,t0){const sd=60/T_.bpm/4,t=t0+(st%2&&T_.sw?sd*T_.sw:0),ch=T_.CHs[bar],B=AU.B;
+ if(st==0&&T_.pad){const p=T_.pad;ch.forEach(n=>{[-6,6].forEach(dt=>tone(t,mtf(n),sd*16,p.v,p.t,B.pad,{a:p.a,r:1.2,sus:1,cut:p.cut,det:dt}))});if(p.sh)ch.slice(0,3).forEach(n=>tone(t,mtf(n+12),sd*16,p.v*.5,'sine',B.pad,{a:2,r:1.5,sus:1}))}
+ const me=T_.M[bar][st];if(me){const f=mtf(me[0]),d=me[1]*sd;if(T_.mi=='lead')tone(t,f,d*.95,T_.mv,'sawtooth',B.lead,{a:.012,r:.12,sus:1,vib:10,cut:3200});else bell(t,f,d+(T_.mi=='glass'?2.2:.9),T_.mv,T_.mi=='glass'?B.glass:B.bell,T_.mi=='glass')}
+ if(T_.arp){const ix=T_.arp.p[st];if(ix!=null){const f=mtf(ch[ix%ch.length]+12*T_.arp.o),A=T_.arp;if(A.i=='glass')bell(t,f,1.6,A.v,B.glass,1);else if(A.i=='bell')bell(t,f,.8,A.v,B.bell);else tone(t,f,sd*1.7,A.v,A.i,B.pl,{cut:2400,sw:2.5})}}
+ T_.bass.forEach(b=>{if(b[0]==st)tone(t,mtf(T_.RT[bar]+b[1]+(T_.bo||0)),(b[2]||2)*sd*.92,T_.bv,T_.bt,B.bass,{a:.01,r:.06,sus:1,cut:T_.bc,sw:T_.bsw||2})});
+ const d=T_.dr;if(d){const kv=T_.kv||1;if(d.k&&d.k[st]=='x')tone(t,140,.3,.5*kv,'sine',B.dr,{fe:40,fd:.2});
+  if((d.s&&d.s[st]=='x')||(T_.fill&&bar==T_.ch.length-1&&st>=12)){nz(t,.16,'highpass',1700,.7,.2,B.dr);tone(t,200,.1,.16,'triangle',B.dr,{fe:130})}
+  if(d.h&&d.h[st]=='x')nz(t,.045,'highpass',7500,.5,.05,B.dr);if(d.o&&d.o[st]=='x')nz(t,.2,'highpass',6500,.5,.06,B.dr);if(d.r&&d.r[st]=='x')nz(t,.035,'bandpass',2600,5,.12,B.dr)}
+ if(T_.sp&&st%2==0&&Math.random()<T_.sp)bell(t+Math.random()*sd,mtf(nm(['E6','G6','B6','D7','A6'][(Math.random()*5)|0])),1.8,.05,B.glass,1)}
+function tick(){const c=AU.c;if(!c||!AU.trk)return;while(AU.next<c.currentTime+.2){playStep(AU.trk,AU.bar,AU.step,AU.next);AU.next+=60/AU.trk.bpm/4;if(++AU.step>=16){AU.step=0;AU.bar=(AU.bar+1)%AU.trk.ch.length}}}
+function stopAmb(){AU.am.forEach(n=>{try{n.stop()}catch(e){}});AU.am=[]}
+function startAmb(k){stopAmb();if(!k)return;const c=AU.c,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=AU.nb;s.loop=true;
+ if(k=='wind'){f.type='bandpass';f.frequency.value=520;f.Q.value=.9;g.gain.value=.13;const l=c.createOscillator(),lg=c.createGain(),l2=c.createOscillator(),lg2=c.createGain();l.frequency.value=.06;lg.gain.value=320;l.connect(lg);lg.connect(f.frequency);l2.frequency.value=.11;lg2.gain.value=.07;l2.connect(lg2);lg2.connect(g.gain);l.start();l2.start();AU.am.push(l,l2)}
+ else{f.type='highpass';f.frequency.value=1700;g.gain.value=.05}
+ s.connect(f);f.connect(g);g.connect(AU.B.amb);s.start();AU.am.push(s)}
+function auSwitch(){if(!AU.c||AU.cur===AU.want)return;AU.cur=AU.want;const had=!!AU.trk;AU.lv=0;applyVol();clearTimeout(AU.sw);
+ AU.sw=setTimeout(()=>{stopAmb();const T_=prep(TR[AU.cur]);AU.trk=T_;AU.bar=0;AU.step=0;AU.next=AU.c.currentTime+.15;AU.lv=T_.lv||1;applyVol();startAmb(T_.amb)},had?600:30)}
+function auWant(n){AU.want=n;if(AU.c)auSwitch()}
+function auDuck(on){if(AU.c)AU.pf.frequency.setTargetAtTime(on?1000:20000,AU.c.currentTime,.1)}
+function auFrame(sp,sk,dt){const c=AU.c;if(!c)return;AU.fT-=dt;if(AU.fT>0)return;AU.fT=.07;const t=c.currentTime;AU.hg.gain.setTargetAtTime(.03+Math.min(sp,40)*.0006,t,.1);AU.hum.frequency.setTargetAtTime(58+sp*1.6,t,.1);AU.sg.gain.setTargetAtTime(sk?.2:0,t,.08);AU.sf.frequency.setTargetAtTime(650+Math.sin(t*9)*120,t,.05)}
+// ---- звуковые эффекты
+const SF={
+ star(t){const sc=['C6','D6','E6','G6','A6','C7','D7'];bell(t,mtf(nm(sc[Math.min(AU.chain,6)])),.35,.15,AU.B.sx)},
+ coin(t){tone(t,mtf(nm('E7')),.09,.05,'sine',AU.B.sxd);tone(t,mtf(nm('B7')),.07,.03,'sine',AU.B.sxd)},
+ buy(t){['C6','E6','G6','C7'].forEach((n,i)=>bell(t+i*.07,mtf(nm(n)),.5,.13,AU.B.sx))},
+ no(t){tone(t,150,.16,.12,'square',AU.B.sxd,{cut:600,fe:90})},
+ dash(t){nz(t,.45,'bandpass',500,1.2,.2,AU.B.sxd,2600)},
+ drone(t){[520,780,1040].forEach((f,i)=>tone(t+i*.09,f,.12,.09,'square',AU.B.sxd,{cut:2200}))},
+ secret(t){['E5','G5','A5','B5','D6','E6','G6','B6'].forEach((n,i)=>bell(t+i*.08,mtf(nm(n)),1.6,.13,AU.B.sx,1))},
+ restore(t){[['C5','E5','G5','C6'],['F5','A5','C6','F6'],['G5','B5','D6','G6']].forEach((a,j)=>a.forEach((n,i)=>bell(t+j*.28+i*.04,mtf(nm(n)),1.2,.1,AU.B.sx)))},
+ win(t){['C5','E5','G5','C6','E6','G6','C7'].forEach((n,i)=>bell(t+i*.1,mtf(nm(n)),1.4,.13,AU.B.sx));['C5','E5','G5','C6'].forEach(n=>bell(t+.8,mtf(nm(n)),2.2,.1,AU.B.sx))},
+ equip(t){tone(t,420,.12,.14,'sine',AU.B.sxd,{fe:900})},
+ twinkle(t,v){const n=['E7','G7','B7','D8'];bell(t,mtf(nm(n[(Math.random()*4)|0])),.9,.03+.05*(v||0),AU.B.sx,1);bell(t+.12,mtf(nm(n[(Math.random()*4)|0])),.9,.02+.04*(v||0),AU.B.sx,1)},
+ blip(t,n){bell(t,mtf(nm(['C6','E6','G6','C7'][(n||0)%4])),.25,.1,AU.B.sx)},
+ thunder(t){nz(t,2.8,'lowpass',380,.7,.55,AU.B.sxd,60);tone(t,60,1.8,.35,'sine',AU.B.sxd,{fe:32})},
+ click(t){tone(t,900,.04,.07,'triangle',AU.B.sxd)}};
+function sfx(n,a){const c=AU.c;if(!c||!CFG.on||!CFG.sfx)return;if(n=='star'){const now=c.currentTime;AU.chain=now-AU.lastS>1.3?0:AU.chain+1;AU.lastS=now}
+ if(n=='coin'){if(c.currentTime-AU.lastC<.09)return;AU.lastC=c.currentTime}const f=SF[n];if(f)f(c.currentTime+.005,a)}
+function auUnlock(){auInit();if(AU.c&&AU.c.state!='running'&&CFG.on)AU.c.resume()}
+['pointerdown','keydown'].forEach(n=>addEventListener(n,auUnlock));
+
+// ================= ГЛАВНОЕ МЕНЮ И ПАУЗА =================
+let PMmode='',PMv='home',mm=false,svT=0;
+{const pm=document.createElement('div');pm.id='pm';pm.innerHTML='<div id="pmc"></div>';document.body.appendChild(pm)}
+const fmtT=s=>{s|=0;const h=(s/3600)|0,m=((s%3600)/60)|0;return h?h+' ч '+m+' мин':m+' мин '+(s%60)+' с'};
+function openPM(mode,v){PMmode=mode;paused=true;mm=mode=='main';const pm=$('pm');pm.className=mode;pm.style.display='flex';$('sprint').style.display='none';renderPM(v||'home');auDuck(mode=='pause')}
+function closePM(){PMmode='';$('pm').style.display='none';mm=false;paused=false;$('sprint').style.display=atSt?'none':'block';auDuck(false)}
+function togglePause(){if(PMmode=='pause')closePM();else if(!PMmode&&!loading&&$('ov').style.display!='flex')openPM('pause')}
+function renderPM(v){PMv=v;const main=PMmode=='main',B=(a,t,x)=>'<button class="pb'+(x||'')+'" data-a="'+a+'">'+t+'</button>',tg=(a,on)=>'<button class="tg'+(on?' on':'')+'" data-a="'+a+'">'+(on?'Вкл':'Выкл')+'</button>';let h='';
+ if(v=='home'){
+  if(main)h='<h1 class="ttl">☁️ Облачный<br>леденец 3D</h1><div class="sub">'+th.name+' · мир '+S.lvl+' из '+MAXL+' · ✨ '+S.got.length+'/'+ITEMS.length+'</div>'+B('play',S.st.t>3?'▶ Продолжить':'▶ Играть')+B('worlds','🌍 Миры')+B('sound','⚙️ Звук и настройки')+B('help','❓ Как играть');
+  else h='<h2 style="margin:0">⏸ Пауза</h2><div class="sub">'+th.name+' · 🍬 '+Math.floor(S.cash)+' · ☁️ осталось '+clouds.length+'</div>'+B('play','▶ Продолжить')+B('stats','📊 Статистика')+B('sound','🔊 Звук и настройки')+B('worlds','🌍 Миры')+B('help','❓ Как играть')+B('home','🏠 В главное меню')}
+ else if(v=='stats'){const s=S.st,rw=(a,b)=>'<span>'+a+'</span><b>'+b+'</b>',isr=o=>isl[o]?(rest(isl[o])?'восстановлен':S[isl[o].k]+'/'+isl[o].need()+' ⭐'):'—';
+  h='<h2 style="margin:0 0 10px">📊 Статистика</h2><div class="st">'+rw('🌍 Мир',th.name+' ('+S.lvl+'/'+MAXL+')')+rw('⏱ Время в игре',fmtT(s.t))+rw('🍬 Конфет сейчас',Math.floor(S.cash))+rw('💰 Заработано всего',Math.floor(s.m))+rw('☁️ Облаков собрано',s.c)+rw('☁️ В этом мире осталось',clouds.length+' из '+total)+rw('⭐ В мешке',cargo.length+' / '+capV())+rw('🏆 Миров пройдено',s.w)+rw('🤖 Дронов',S.dr+' / 10 (доставок: '+s.d+')')+rw('✨ Секретов найдено',S.got.length+' / '+ITEMS.length)+rw('🏝 Станция дронов',isr(0))+rw('🏝 Остров коллекции',isr(1))+'</div><h3 style="margin:14px 0 6px;font-size:15px">Прокачка</h3><div class="st">'+UP.map(u=>rw(u[1],'ур. '+S[u[0]]+' · '+u[3]())).join('')+'</div>'+B('back','‹ Назад')}
+ else if(v=='sound'){const q=['Авто','Экономная','Максимум'][CFG.q];
+  h='<h2 style="margin:0 0 6px">🔊 Звук и настройки</h2><div class="sr"><span>🔊 Звук</span>'+tg('tAll',CFG.on)+'</div><div class="sr"><span>🎵 Музыка</span>'+tg('tMus',CFG.mus)+'</div><input class="pr" id="rMv" type="range" min="0" max="100" value="'+Math.round(CFG.mv*100)+'"><div class="sr"><span>🔔 Эффекты</span>'+tg('tSfx',CFG.sfx)+'</div><input class="pr" id="rSv" type="range" min="0" max="100" value="'+Math.round(CFG.sv*100)+'">'
+  +'<div class="sr"><span>🖼 Графика</span><button class="tg on" data-a="q">'+q+'</button></div><div class="sub" style="font-size:12px;margin:4px 0 0">Сейчас: '+(LOW?'экономный режим (телефон)':'полное качество')+'. Часть эффектов применится при смене мира.</div>'+B('back','‹ Назад')}
+ else if(v=='help'){h='<h2 style="margin:0 0 8px">❓ Как играть</h2><div class="st" style="grid-template-columns:1fr;text-align:left;line-height:1.45"><span>🎮 Веди кита: джойстик под пальцем или WASD / стрелки / мышь. Рывок — Shift, Пробел или ⚡.</span><span>☁️ Соси облака, пока кит летит, а не рвётся. Тяжёлые облака требуют Мощности.</span><span>🍭 Вези звёзды в лавку, продавай, прокачивай всё на станции 🛠.</span><span>🏝 Два острова-руины оживают от звёздочек: на станции дронов покупают помощников, на острове коллекции надевают находки.</span><span>✨ В каждом мире спрятаны секреты. Подсказок на экране нет, слушай искорки поблизости.</span><span>⏸ Esc или P — пауза.</span></div>'+B('back','‹ Назад')}
+ $('pmc').innerHTML=h}
+$('pmc').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;sfx('click');
+ if(a=='play'){auInit();if(PMmode=='main')auWant('w'+S.lvl);closePM()}
+ else if(a=='home'){openPM('main');auWant('menu')}
+ else if(a=='back')renderPM('home');else if(a=='stats'||a=='sound'||a=='help')renderPM(a)
+ else if(a=='worlds'){buildMenu();$('pm').style.display='none';$('menu').style.display='flex'}
+ else{if(a=='tAll')CFG.on=CFG.on?0:1;else if(a=='tMus')CFG.mus=CFG.mus?0:1;else if(a=='tSfx')CFG.sfx=CFG.sfx?0:1;else if(a=='q'){CFG.q=(CFG.q+1)%3;applyQ()}
+  saveCfg();applyVol();if(AU.c)CFG.on?AU.c.resume():0;renderPM('sound')}});
+$('pmc').addEventListener('input',e=>{if(e.target.id=='rMv')CFG.mv=e.target.value/100;else if(e.target.id=='rSv')CFG.sv=e.target.value/100;else return;saveCfg();applyVol()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(!PMmode&&!loading)openPM('pause');if(AU.c)AU.c.suspend()}else if(AU.c&&CFG.on)AU.c.resume()});
+
+// ================= игра =================
+let stam=100,sprint=false,exh=false,sBtn=false,trT=0,atSt=null,stuckT=0,clouds=[],cargo=[],P=new V3(12,0,12),V=new V3(),keys={},ptr=null,t=0,sellT=0,heading=0,floats=[],total=0,done=false,paused=false,loading=false,lastFl=0;
+const WHITE=new THREE.Color('#ffffff');
+const kn=e=>(e.code||'').replace(/^Key/,'').toLowerCase();addEventListener('keydown',e=>{if(kn(e)=='escape'||kn(e)=='p'){togglePause();return}keys[kn(e)]=1;if(/^(arrow|space)/.test(kn(e)))e.preventDefault()});addEventListener('keyup',e=>keys[kn(e)]=0);addEventListener('blur',()=>keys={});
+const sb=$('sprint');sb.addEventListener('pointerdown',e=>{sBtn=true;e.preventDefault()});['pointerup','pointercancel','pointerleave'].forEach(n=>sb.addEventListener(n,()=>sBtn=false));
+// сенсорный экран: плавающий джойстик (появляется под пальцем), мышь: вести курсором как раньше
+const JR=55,joy=$('joy'),knob=joy.firstElementChild||joy.firstChild;let jo=null;
+function joyShow(e){if(!jo)return;let vx=e.clientX-jo.x,vy=e.clientY-jo.y;const l=Math.hypot(vx,vy);if(l>JR){vx*=JR/l;vy*=JR/l}knob.style.transform='translate('+vx+'px,'+vy+'px)'}
+addEventListener('pointerdown',e=>{if(e.target.tagName=='CANVAS'){ptr=e;$('hint').style.display='none';if(e.pointerType!='mouse'){jo={x:e.clientX,y:e.clientY};joy.style.left=jo.x+'px';joy.style.top=jo.y+'px';joy.style.display='block';joyShow(e)}}});
+addEventListener('pointermove',e=>{if(ptr&&e.pointerId===ptr.pointerId){ptr=e;joyShow(e)}});const pu=e=>{if(ptr&&e.pointerId===ptr.pointerId){ptr=null;jo=null;joy.style.display='none'}};addEventListener('pointerup',pu);addEventListener('pointercancel',pu);
+
+// раскладка облаков уровня: ближе к лавке — лёгкие, дальше — крепкие и дорогие
+function spawnCloud(tier,d,a){const pat=(Math.random()*NP)|0,g=new THREE.Object3D(),s0=1.2+tier*.3;g.scale.setScalar(s0);g.position.set(Math.cos(a)*d,Math.random()*2.5,Math.sin(a)*d);
+ if(Math.hypot(g.position.x-ST.x,g.position.z-ST.z)<13)g.position.x-=30;
+ clouds.push({g,pat,s0,tier,need:tier?TB[tier]*th.needM:Math.min(TB[0]*th.needM,powV()),val:Math.round((4+tier*4)*th.valM),p:0,fly:0,o:g.position.clone(),s:Math.random()*6})}
+function newLevel(){while(CL.children.length)CL.remove(CL.children[0]);clouds=[];items=[];cargo=[];done=false;P.set(12,0,12);V.set(0,0,0);
+ const r=th.R;total=th.total;
+ for(let i=0;i<total;i++){const d=13+(i<total*.18?Math.random()*(r*.4-13):Math.sqrt(Math.random())*(r-13)),a=Math.random()*6.283,tier=d<r*.4?0:d<r*.65?1:d<r*.85?2:3;spawnCloud(tier,d,a)}
+ buildIM();spawnItems();ui()}
+function ui(){$('cash').textContent='🍬 '+Math.floor(S.cash);$('lvl').textContent='🌍 '+S.lvl+'/'+MAXL+' · облаков '+clouds.length+'/'+total+' · ✨ '+S.got.length+'/'+ITEMS.length;$('load').textContent='⭐ '+cargo.length+'/'+capV();
+ UP.forEach(u=>{const k=u[0],c=cost(u),lv=S[k],cur=u[3]();S[k]++;const nx=u[3]();S[k]--;const nm=u[1].split(' ');u.r.querySelector('.ic').textContent=nm[0];u.r.querySelector('b').textContent=nm.slice(1).join(' ')+' · ур. '+lv;u.r.querySelector('span').textContent=DESC[k];const nf=lv?((lv-1)%10)+1:0;u.r.querySelector('.lv').innerHTML=Array.from({length:10},(_,i)=>'<s'+(i<nf?' class="on"':'')+'></s>').join('');u.r.querySelector('i').textContent=cur+' → '+nx;u.b.textContent='🍬 '+c;u.b.disabled=S.cash<c});const sh=$('scash');if(sh)sh.textContent='🍬 '+Math.floor(S.cash);ui2()}
+function marker(id,w,em,x2,maxD){const e=$(id),v=w.clone();v.y+=4;v.project(cam);let x=v.x,yy=v.y;if(v.z>1){x=-x;yy=-yy}const dist=Math.hypot(w.x-P.x,w.z-P.z),inside=v.z<=1&&Math.abs(x)<.9&&Math.abs(yy)<.78;if(maxD&&dist>maxD){e.style.display='none';return}if(inside&&dist<28){e.style.display='none';return}
+ const m=Math.max(Math.abs(x)/.9,Math.abs(yy)/.78,1);x/=m;yy/=m;e.style.display='block';e.style.left=(x+1)/2*innerWidth+'px';e.style.top=(1-yy)/2*innerHeight+'px';e.textContent=x2||(em+' '+Math.round(dist)+'м')}
+function fl(txt,v){const e=document.createElement('div');e.className='f';e.textContent=txt;document.body.appendChild(e);floats.push({e,v:v.clone(),t:1.1})}
+function rescue(){for(let i=0;i<10;i++)spawnCloud(0,13+Math.random()*14,Math.random()*6.283);total+=10;fl('☁️ У базы выросли новые лёгкие облака!',new V3(-3,12,-2));ui()}
+
+// заставка, меню миров, переходы между уровнями
+function banner(){$('bn1').textContent='Мир '+S.lvl+' из '+MAXL;$('bn2').textContent=th.name;$('bn3').textContent=th.intro;const b=$('banner');b.classList.remove('show');void b.offsetWidth;b.classList.add('show')}
+function buildMenu(){const l=$('mlist');l.innerHTML='';LV.forEach((L,i)=>{const n=i+1,b=document.createElement('button'),lock=!FREE_SELECT&&n>S.max;b.className='wc'+(n==S.lvl?' cur':'');b.style.background=L.card;b.disabled=lock;
+  b.innerHTML='<b>'+(lock?'🔒 ':'')+'Мир '+n+' · '+L.name+(n==S.lvl?' (начать заново)':'')+'</b><span>'+L.tag+'</span>';b.onclick=()=>{$('menu').style.display='none';closePM();go(n,true)};l.appendChild(b)})}
+$('menuBtn').onclick=()=>openPM('pause');$('mclose').onclick=()=>{$('menu').style.display='none';openPM(PMmode||'pause')};
+// новый мир: прокачка и конфеты обнуляются (fresh), строится всё окружение
+function startLevel(n,fresh){S.lvl=n;S.max=Math.max(S.max,n);if(fresh)resetRun();save();
+ floats.forEach(f=>f.e.remove());floats=[];buildWorld();buildSpin();newLevel();stam=100;exh=false;sprint=false;atSt=null;flash=0;lastFl=1;banner();buildMenu();auWant('w'+S.lvl)}
+function go(n,fresh){if(loading)return;loading=true;const f=$('fade');f.style.opacity=1;setTimeout(()=>{startLevel(n,fresh);f.style.opacity=0;loading=false},380)}
+$('ovb').onclick=()=>{$('ov').style.display='none';go(S.lvl<MAXL?S.lvl+1:1,true)};
+function finish(){done=true;S.st.w++;sfx('win');S.max=Math.max(S.max,Math.min(MAXL,S.lvl+1));save();
+ if(S.lvl<MAXL){const nx=LV[S.lvl];$('ovt').textContent='🎉 Мир «'+th.name+'» пройден!';$('ovp').textContent='Дальше — «'+nx.name+'». Прокачка и конфеты сбрасываются: в новом мире начнёшь с нуля.';$('ovb').textContent='В мир «'+nx.name+'» ➜'}
+ else{$('ovt').textContent='🏆 Все три мира пройдены!';$('ovp').textContent='Ты собрал все облака — от сахарного заката до грозовой карамели. Можно пройти заново.';$('ovb').textContent='Играть заново ➜'}
+ $('ov').style.display='flex'}
+
+// ---------- игровая логика ----------
+let last=performance.now();
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;if((!paused||mm)&&!loading)step(dt);view(dt);rd.render(sc,cam);requestAnimationFrame(loop)}
+function step(dt){
+ let dx=0,dz=0;
+ if(keys.a||keys.arrowleft)dx--;if(keys.d||keys.arrowright)dx++;if(keys.w||keys.arrowup)dz--;if(keys.s||keys.arrowdown)dz++;
+ if(ptr&&jo){const px=ptr.clientX-jo.x,py=ptr.clientY-jo.y,l=Math.hypot(px,py);if(l>8){const k=Math.min(1,l/JR);dx=px/l*k;dz=py/l*k}} // джойстик: сила зависит от отклонения
+ else if(ptr){const px=ptr.clientX-innerWidth/2,py=ptr.clientY-innerHeight*.55,l=Math.hypot(px,py);if(l>14){dx=px/l;dz=py/l}}
+ const l=Math.hypot(dx,dz);if(l>1){dx/=l;dz/=l}
+ const wantS=(keys.shiftleft||keys.shiftright||keys.space||sBtn)&&Math.hypot(dx,dz)>.1,smax=staV();
+ if(wantS&&!exh&&stam>0){if(!sprint)sfx('dash');sprint=true;stam-=65*dt;if(stam<=0){stam=0;exh=true}}else{sprint=false;stam=Math.min(smax,stam+22*dt);if(exh&&stam>smax*.3)exh=false}
+ const sp=spdV()*(1-Math.min(.35,cargo.length*.01))*(sprint?1.8:1);
+ V.x+=(dx*sp-V.x)*Math.min(1,dt*5);V.z+=(dz*sp-V.z)*Math.min(1,dt*5);
+ P.x+=V.x*dt;P.z+=V.z*dt;const pr=Math.hypot(P.x,P.z),lim=th.R+8;if(pr>lim){P.x*=lim/pr;P.z*=lim/pr}
+ if(Math.hypot(V.x,V.z)>1.5){const tt=Math.atan2(-V.z,V.x);let d=tt-heading;d=Math.atan2(Math.sin(d),Math.cos(d));heading+=d*Math.min(1,dt*6)}
+ const y=3+Math.sin(t*2)*.35;blimp.position.set(P.x,y,P.z);ship.rotation.y=heading;ship.rotation.z=Math.sin(t*2)*.04;prop.rotation.y=t*18;
+ spin.position.set(P.x,y-2.3,P.z);blades.rotation.y=t*8;
+ if(sprint){trT-=dt;if(trT<=0){trT=.04;const q=trail.find(p=>p.l<=0);if(q){q.l=.5;q.m.visible=true;q.m.position.set(P.x-Math.cos(heading)*3+Math.random()-.5,y-.3,P.z+Math.sin(heading)*3+Math.random()-.5)}}}
+ trail.forEach(q=>{if(q.l>0){q.l-=dt;q.m.scale.setScalar(Math.max(.01,q.l*.7));q.m.rotation.y+=dt*8;if(q.l<=0)q.m.visible=false}});
+ const ss=.5+Math.min(S.cap,20)*.05,fk=cargo.length/Math.max(capV(),1);sk0+=(ss-sk0)*Math.min(1,dt*3);stack.scale.set(sk0,sk0*(1+fk*.07),sk0);rig(y);stack.rotation.z=Math.sin(t*2)*.05-V.x*.008;stack.rotation.x=V.z*.008;
+ const r=radV(),pw=powV(),cap=capV();let inflight=0,bi=0,lockC=null;for(let q=0;q<clouds.length;q++)if(clouds[q].fly)inflight++;
+ for(let i=clouds.length-1;i>=0;i--){const c=clouds[i],g=c.g;
+  if(c.fly){c.fly+=dt*3;g.position.lerp(blimp.position,Math.min(1,c.fly*.6));g.scale.setScalar(Math.max(.05,c.s0*(1-c.fly)));
+   if(c.fly>=1){CL.remove(g);clouds.splice(i,1);cargo.push({t:c.tier,v:c.val});S.st.c++;sfx('star');ui()}continue}
+  if(c.dr==2){const k=c.p;g.position.x=c.o.x+Math.sin(t*40)*.08*k;g.position.z=c.o.z;g.position.y=c.o.y+Math.sin(t+c.s)*.3;g.scale.setScalar(c.s0*(1-k*.6));g.rotation.y=t*.15+c.s;continue}
+  const d=Math.hypot(g.position.x-P.x,g.position.z-P.z);
+  if(d<r+1.5){
+   if(pw<c.need-.001){if(!lockC||d<lockC.d)lockC={c,d};c.p=Math.max(0,c.p-dt*.5)}
+   else if(!sprint&&!mm&&cargo.length+inflight<cap){c.p+=dt*1.2*pw/c.need;
+    if(bi<40){bp.set([P.x,y-2.3,P.z,g.position.x,g.position.y,g.position.z],bi*6);bi++}
+    if(c.p>=1){c.fly=.01;inflight++}}
+  }else c.p=Math.max(0,c.p-dt*.5);
+  if(!c.fly){if(d>110&&!c.p)continue;const k=c.p;g.position.x=c.o.x+(P.x-c.o.x)*k*.25+(k?Math.sin(t*40)*.08*k:0);g.position.z=c.o.z+(P.z-c.o.z)*k*.25;g.position.y=c.o.y+Math.sin(t+c.s)*.3;g.scale.setScalar(c.s0*(1-k*.4));g.rotation.y=t*.15+c.s}}
+ beamG.setDrawRange(0,bi*2);auFrame(Math.hypot(V.x,V.z),bi>0,dt);beamG.attributes.position.needsUpdate=true;
+ const lk=$('lock');if(lockC){const v=lockC.c.g.position.clone();v.y+=3;v.project(cam);lk.style.display='block';lk.style.left=(v.x+1)/2*innerWidth+'px';lk.style.top=(1-v.y)/2*innerHeight+'px';lk.textContent='🔒 нужна сила '+lockC.c.need.toFixed(1)+' (у тебя '+pw.toFixed(1)+')'}else lk.style.display='none';
+ while(cm.length<cargo.length){const m=mesh(starG,starM[0]);m.scale.setScalar(.45);stack.add(m);cm.push(m)}
+ cm.forEach((m,i)=>{m.visible=i<cargo.length;if(m.visible){const f=i/Math.max(cap,1),yy=-1.7+f*2.3,rr=(1.5-Math.abs(yy+.4)*.35)*(.25+.75*((i*.618)%1)),an=i*2.4;m.material=starM[cargo[i].t];m.rotation.set(an,t+i,0);m.position.set(Math.cos(an)*rr,yy+Math.sin(t*3+i)*.04,Math.sin(an)*rr)}});
+ if(Math.hypot(P.x,P.z)<10.5&&cargo.length){sellT-=dt;if(sellT<=0){sellT=.07;const it=cargo.pop(),v=Math.round(it.v*valV());S.cash+=v;S.st.m+=v;sfx('coin');fl('+'+v,new V3(-3,11,-2));ui();save()}}
+ stuckT+=dt;if(stuckT>1.5){stuckT=0;if(clouds.length&&!cargo.length&&!inflight&&S.cash<cost(UP[3])&&!clouds.some(c=>c.fly||powV()>=c.need-.001))rescue()}
+ v3step(dt);drawClouds();
+ if(!clouds.length&&!cargo.length&&!done&&!drones.some(d=>d.st==3))finish();
+ {const nr=Math.hypot(P.x-ST.x,P.z-ST.z)<10,nd=isl[0]&&rest(isl[0])&&Math.hypot(P.x-DP.x,P.z-DP.z)<9,nk=isl[1]&&rest(isl[1])&&Math.hypot(P.x-KP.x,P.z-KP.z)<9,cd=(nr?1:0)+(nd?2:0)+(nk?4:0);if(cd!==atSt){atSt=cd;$('shop').style.display=nr?'flex':'none';dsh.style.display=nd?'flex':'none';wd.style.display=nk?'flex':'none';if(nk)buildWd();ui2();$('sprint').style.display=cd?'none':'block'}}
+ {const sf=$('stam').firstChild;sf.style.width=Math.max(0,stam/staV()*100)+'%';sf.style.background=exh?'#ff5a5a':'#ffd23f'}
+}
+// ---------- картинка: камера, небо, погода, декор (работает и на паузе) ----------
+function view(dt){
+ if(mm){const a=t*.15;cam.position.set(P.x+Math.sin(a)*22,7+Math.sin(t*.3)*1.5,P.z+Math.cos(a)*22);cam.lookAt(blimp.position.x,3,blimp.position.z)}else{cam.position.lerp(new V3(P.x,13,P.z+29),Math.min(1,dt*4));cam.lookAt(P.x,0,P.z-8)}
+ sky.position.copy(cam.position);far.position.set(cam.position.x,0,cam.position.z);if(fx.follow)fx.follow.position.copy(cam.position);
+ cam.fov+=((sprint?64:55)-cam.fov)*Math.min(1,dt*6);cam.updateProjectionMatrix();
+ gA.rotation.y=t*.6;gB.rotation.y=-t*.9;bc.rotation.y=t*1.5;
+ marker('mk0',ORG,'🍭');marker('mk1',ST,'🛠');v3view();
+ decor.forEach(d=>{d.m.position.y=d.y0+Math.sin(t*.6+d.s)*.8;d.m.rotation.y+=dt*.03});
+ confetti.forEach(c=>{c.m.rotation.y+=dt*c.r;c.m.rotation.x+=dt*c.r*.5;c.m.position.y=c.y0+Math.sin(t+c.r*5)*.5});
+ fx.update(P,t,dt);
+ // вспышка молнии: свет, небо, туман и экран
+ flash=Math.max(0,flash-dt*3.2);if(flash>0||lastFl>0){hemi.intensity=th.hemi[2]+flash*1.8;sky.material.color.setScalar(1+flash*.9);sc.fog.color.set(th.fog).lerp(WHITE,flash*.45);$('flash').style.opacity=flash*.2;lastFl=flash}
+ floats.forEach(f=>{f.t-=dt;f.v.y+=dt*3;const v=f.v.clone().project(cam);f.e.style.left=(v.x+1)/2*innerWidth+'px';f.e.style.top=(1-v.y)/2*innerHeight+'px';f.e.style.opacity=Math.min(1,f.t*2)});
+ floats=floats.filter(f=>{if(f.t<=0)f.e.remove();return f.t>0});
+}
+{const q=+new URLSearchParams(location.search).get('lvl'),n=(q>=1&&q<=MAXL)?(q|0):S.lvl;startLevel(n,n!==S.lvl)} // ?lvl=2 — открыть нужный мир сразу
+cam.position.set(12,13,41);applyQ();openPM('main');auWant('menu');requestAnimationFrame(loop);
+})();
+</script>
+</body></html>
